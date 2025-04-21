@@ -1,12 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 import { useStore } from "@/model/store";
-import {
-  OTP_LENGTH,
-  SERVICE_DOMAIN,
-  SERVICE_PROTOCOL,
-  SERVICE_TYPE,
-} from "@/constants/Connection";
+import { OTP_LENGTH } from "@/constants/Connection";
 import { AvailableGame } from "@/model/types";
 import { createOtpResponseEvent } from "@/model/messageCreators";
 import { useRouter } from "expo-router";
@@ -18,33 +13,19 @@ const JoinGame = () => {
   const router = useRouter();
 
   const {
-    clientTcpService,
     clientSocket,
     connectToGame,
     isWaitingForOtp,
     availableGames,
-    addAvailableGame,
+    scanForGames,
     clientName,
     setClientName,
     isInvalidOtp,
     isJoined,
   } = useStore();
+
   useEffect(() => {
-    clientTcpService.on("resolved", (service) => {
-      console.log("Found game:", service.name);
-      addAvailableGame({
-        host: service.host,
-        name: service.name,
-        port: service.port,
-      });
-    });
-
-    clientTcpService.scan(SERVICE_TYPE, SERVICE_PROTOCOL, SERVICE_DOMAIN);
-
-    clientTcpService.on("error", (error) => {
-      // TODO handle error
-      console.log("Error:", error);
-    });
+    scanForGames();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -6,6 +6,11 @@ import TcpSocket from "react-native-tcp-socket";
 import { Store } from "@/model/store";
 import { createNewPlayerJoinRequestEvent } from "@/model/messageCreators";
 import { handleMessageFromHost } from "@/model/communication-client";
+import {
+  SERVICE_DOMAIN,
+  SERVICE_PROTOCOL,
+  SERVICE_TYPE,
+} from "@/constants/Connection";
 
 export interface ClientSlice {
   clientSocket: Socket | null;
@@ -15,10 +20,11 @@ export interface ClientSlice {
   isWaitingForOtp: boolean;
   isInvalidOtp: boolean;
   isJoined: boolean;
+  scanForGames: () => void;
   addAvailableGame: (game: AvailableGame) => void;
   connectToGame: (game: AvailableGame) => Promise<void>;
   setClientName: (name: string) => void;
-  setWaitingForOtp: (value: boolean) => void;
+  setIsWaitingForOtp: (value: boolean) => void;
   setIsInvalidOtp: (isInvalid: boolean) => void;
   setIsJoined: (isJoined: boolean) => void;
 }
@@ -44,8 +50,28 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
       }
       return state;
     }),
+  scanForGames: () => {
+    const store = get();
+
+    store.clientTcpService.on("resolved", (service) => {
+      console.log("Found game:", service.name);
+      store.addAvailableGame({
+        host: service.host,
+        name: service.name,
+        port: service.port,
+      });
+    });
+
+    store.clientTcpService.scan(SERVICE_TYPE, SERVICE_PROTOCOL, SERVICE_DOMAIN);
+
+    store.clientTcpService.on("error", (error) => {
+      // TODO handle error
+      console.log("Error:", error);
+    });
+  },
   connectToGame: (game: AvailableGame) => {
     console.log("Connecting to game ", game.name);
+
     return new Promise<void>((resolve, reject) => {
       const client = TcpSocket.createConnection(
         {
@@ -54,7 +80,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
         },
         () => {
           console.log("Connected to game server");
-          console.log(get().clientName);
+
           client.write(createNewPlayerJoinRequestEvent(get().clientName));
           set(() => ({ clientSocket: client }));
           resolve();
@@ -85,7 +111,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
       });
     });
   },
-  setWaitingForOtp: (value: boolean) => {
+  setIsWaitingForOtp: (value: boolean) => {
     set(() => ({ isWaitingForOtp: value }));
   },
   setIsInvalidOtp: (isInvalid: boolean) => {

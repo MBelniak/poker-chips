@@ -8,7 +8,7 @@ import {
 
 export const handleMessageFromHost = (message: Message, store: Store) => {
   if (isOtpRequestMessage(message)) {
-    store.setWaitingForOtp(true);
+    store.setIsWaitingForOtp(true);
   } else if (isInvalidOtpMessage(message)) {
     store.setIsInvalidOtp(true);
   } else if (isGameStateMessage(message)) {
