@@ -1,9 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { useHostStore } from "@/model/store";
+import { useStore } from "@/model/store";
 
 const Game = () => {
-  const store = useHostStore();
+  const store = useStore();
 
   if (store.players.length < 2) {
     throw new Error("At least 2 players required!");

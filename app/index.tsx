@@ -8,10 +8,7 @@ const MainPage = () => {
   return (
     <View style={{ marginBlock: "auto" }}>
       <Button title="Host a game" onPress={() => router.navigate("/host")} />
-      <Button
-        title="Join a game"
-        onPress={() => router.navigate("/join-game")}
-      />
+      <Button title="Join a game" onPress={() => router.navigate("/client")} />
     </View>
   );
 };

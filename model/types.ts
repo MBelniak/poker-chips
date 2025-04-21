@@ -2,8 +2,14 @@ import Socket from "react-native-tcp-socket/lib/types/Socket";
 
 export type GameStatus = "waiting" | "playing" | "finished";
 
+export type AvailableGame = {
+  name: string;
+  host: string;
+  port: number;
+};
+
 export type Player =
-  | { socket: Socket; name: string }
+  | { socket: Socket; name: string; isHost: false }
   | {
       socket: null;
       name: string;
@@ -31,13 +37,18 @@ export type GameState = {
   dealer: string | null;
   currentTurn: string | null;
   actionHistory: Action[];
+  buyInAmount: number;
   playersState: { name: string; state: PlayerState }[];
 };
 
 export const enum EventType {
   NEW_PLAYER_JOINED = "NEW_PLAYER_JOINED",
   NEW_PLAYER_JOIN_REQUEST = "NEW_PLAYER_JOIN_REQUEST",
+  NEW_PLAYER_OTP_REQUEST = "NEW_PLAYER_OTP_REQUEST",
+  NEW_PLAYER_OTP_RESPONSE = "NEW_PLAYER_OTP_RESPONSE",
   GAME_STATE = "GAME_STATE",
+  INVALID_OTP = "INVALID_OTP",
+  NAME_ALREADY_TAKEN = "NAME_ALREADY_TAKEN",
   PLAYER_ACTION = "PLAYER_ACTION",
 }
 
@@ -48,6 +59,16 @@ export type NewPlayerJoinedMessage = {
 export type NewPlayerJoinRequestMessage = {
   type: EventType.NEW_PLAYER_JOIN_REQUEST;
   name: string;
+};
+export type NewPlayerOTPRequestMessage = {
+  type: EventType.NEW_PLAYER_OTP_REQUEST;
+};
+export type NewPlayerOTPResponseMessage = {
+  type: EventType.NEW_PLAYER_OTP_RESPONSE;
+  otp: string;
+};
+export type InvalidOtpMessage = {
+  type: EventType.INVALID_OTP;
 };
 export type GameStateMessage = {
   type: EventType.GAME_STATE;
