@@ -14,6 +14,7 @@ import {
 } from "@/constants/Connection";
 import { StateCreator } from "zustand/vanilla";
 import { Store } from "@/model/store";
+import { createDisconnectEvent } from "@/model/messageCreators";
 
 export interface HostSlice {
   hostTcpService: Zeroconf;
@@ -24,6 +25,8 @@ export interface HostSlice {
   stopServer: () => void;
   addPlayer: (player: Player) => void;
   removePlayer: (player: Player) => void;
+  removeAllPlayers: () => void;
+  sendDisconnectEventToPlayer: (player: Player) => void;
   addJoinRequest: (
     id: string,
     data: { otp: string; playerName: string },
@@ -99,7 +102,17 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
         state.players.findIndex((p) => p.socket?._id === player.socket?._id),
         1,
       ),
+      playersState: state.playersState.toSpliced(
+        state.playersState.findIndex((p) => p.name === player.name),
+        1,
+      ),
     })),
+  removeAllPlayers: () => {
+    set(() => ({ players: [], playersState: [] }));
+  },
+  sendDisconnectEventToPlayer: (player: Player) => {
+    player.socket?.write(createDisconnectEvent());
+  },
   addJoinRequest: (id: string, data: { otp: string; playerName: string }) => {
     set((state) => ({
       pendingJoinRequests: {

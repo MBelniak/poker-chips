@@ -1,5 +1,7 @@
 import {
+  DisconnectMessage,
   EventType,
+  GameState,
   GameStateMessage,
   InvalidOtpMessage,
   Message,
@@ -39,6 +41,9 @@ export const isNewPlayerOTPResponseMessage = (
 export const isPlayerAction = (msg: Message): msg is PlayerActionMessage =>
   msg.type === EventType.PLAYER_ACTION;
 
+export const isDisconnectMessage = (msg: Message): msg is DisconnectMessage =>
+  msg.type === EventType.DISCONNECT;
+
 export const createNewPlayerJoinedEvent = (name: string) =>
   JSON.stringify({
     type: EventType.NEW_PLAYER_JOINED,
@@ -57,10 +62,10 @@ export const createOtpRequestEvent = () =>
 export const createOtpResponseEvent = (otp: string) =>
   JSON.stringify({ type: EventType.NEW_PLAYER_OTP_RESPONSE, otp });
 
-export const createGameStateEvent = (store: Store) =>
+export const createGameStateEvent = (gameState: GameState) =>
   JSON.stringify({
     type: EventType.GAME_STATE,
-    gameState: JSON.stringify(mapStoreToGameState(store)),
+    gameState: JSON.stringify(gameState),
   } as GameStateMessage);
 
 export const createInvalidOtpMessage = () =>
@@ -70,3 +75,6 @@ export const createInvalidOtpMessage = () =>
 
 export const createNameAlreadyTakenMessage = () =>
   JSON.stringify({ type: EventType.NAME_ALREADY_TAKEN });
+
+export const createDisconnectEvent = () =>
+  JSON.stringify({ type: EventType.DISCONNECT });

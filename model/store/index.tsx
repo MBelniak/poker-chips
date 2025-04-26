@@ -9,22 +9,27 @@ import {
 export type Store = GameState &
   HostSlice &
   ClientSlice & {
+    buyInAmount: number;
     setBuyInAmount: (amount: string) => void;
-    setGameState: (state: GameState) => void;
+    setGameState: (state: Partial<GameState>) => void;
   };
 
-export const useStore = create<Store>((set, get, store) => ({
-  ...createHostSlice(set, get, store),
-  ...createClientSlice(set, get, store),
+export const getDefaultGameState = (): GameState => ({
   status: "waiting",
   dealer: null,
   currentTurn: null,
   actionHistory: [],
   playersState: [],
+});
+
+export const useStore = create<Store>((set, get, store) => ({
+  ...createHostSlice(set, get, store),
+  ...createClientSlice(set, get, store),
+  ...getDefaultGameState(),
   buyInAmount: 0,
   setBuyInAmount: (amount: string) =>
     set(() => ({ buyInAmount: amount.length ? parseInt(amount) : 0 })),
-  setGameState: (state: GameState) => {
+  setGameState: (state: Partial<GameState>) => {
     set(() => ({
       ...state,
     }));
@@ -38,6 +43,5 @@ export const mapStoreToGameState = (store: Store): GameState => {
     currentTurn: store.currentTurn,
     actionHistory: store.actionHistory,
     playersState: store.playersState,
-    buyInAmount: store.buyInAmount,
   };
 };

@@ -4,7 +4,7 @@ import { useStore } from "@/model/store";
 import { OTP_LENGTH } from "@/constants/Connection";
 import { AvailableGame } from "@/model/types";
 import { createOtpResponseEvent } from "@/model/messageCreators";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 const JoinGame = () => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -13,21 +13,27 @@ const JoinGame = () => {
   const router = useRouter();
 
   const {
+    clientTcpService,
     clientSocket,
-    connectToGame,
     isWaitingForOtp,
     availableGames,
-    scanForGames,
     clientName,
-    setClientName,
     isInvalidOtp,
     isJoined,
+    connectToGame,
+    startScanningForGames,
+    setClientName,
+    stopScanningForGames,
   } = useStore();
 
-  useEffect(() => {
-    scanForGames();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      startScanningForGames();
+      return () => {
+        stopScanningForGames();
+      };
+    }, [startScanningForGames, stopScanningForGames]),
+  );
 
   const joinGame = useCallback(
     (game: AvailableGame) => {
@@ -45,10 +51,12 @@ const JoinGame = () => {
   useEffect(() => {
     if (isJoined) {
       router.navigate("/client/game");
+      setOtpSubmitted(false);
+      setIsConnecting(false);
     } else if (isInvalidOtp) {
       setOtpSubmitted(false);
     }
-  }, [isInvalidOtp, isJoined, router]);
+  }, [clientTcpService, isInvalidOtp, isJoined, router]);
 
   return (
     <View style={{ marginBlock: "auto" }}>
@@ -76,7 +84,7 @@ const JoinGame = () => {
         ) : (
           <View>
             <Text>{"Type your name to connect to the game"}</Text>
-            <TextInput onChangeText={setClientName} />
+            <TextInput onChangeText={setClientName} value={clientName} />
             <Text>{"Scanning for games..."}</Text>
             <Text>{"Available games: "}</Text>
             {availableGames.map((game) => {

@@ -15,18 +15,21 @@ import {
 export interface ClientSlice {
   clientSocket: Socket | null;
   clientName: string;
-  clientTcpService: Zeroconf;
+  clientTcpService: Zeroconf | null;
   availableGames: AvailableGame[];
   isWaitingForOtp: boolean;
   isInvalidOtp: boolean;
   isJoined: boolean;
-  scanForGames: () => void;
+  startScanningForGames: () => void;
+  stopScanningForGames: () => void;
   addAvailableGame: (game: AvailableGame) => void;
   connectToGame: (game: AvailableGame) => Promise<void>;
+  setClientSocket: (clientSocket: Socket | null) => void;
   setClientName: (name: string) => void;
   setIsWaitingForOtp: (value: boolean) => void;
   setIsInvalidOtp: (isInvalid: boolean) => void;
   setIsJoined: (isJoined: boolean) => void;
+  exitGame: () => void;
 }
 
 export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
@@ -36,12 +39,15 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
   _,
 ) => ({
   clientSocket: null,
-  clientTcpService: new Zeroconf(),
+  clientTcpService: null,
   availableGames: [],
   clientName: "",
   isWaitingForOtp: false,
   isInvalidOtp: false,
   isJoined: false,
+  setClientSocket: (clientSocket: Socket | null) => {
+    set(() => ({ clientSocket }));
+  },
   setClientName: (name: string) => set(() => ({ clientName: name })),
   addAvailableGame: (game: AvailableGame) =>
     set((state) => {
@@ -50,9 +56,16 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
       }
       return state;
     }),
-  scanForGames: () => {
+  startScanningForGames: () => {
     const store = get();
+    set(() => ({
+      availableGames: [],
+      isWaitingForOtp: false,
+      isInvalidOtp: false,
+      isJoined: false,
+    }));
 
+    store.clientTcpService = new Zeroconf();
     store.clientTcpService.on("resolved", (service) => {
       console.log("Found game:", service.name);
       store.addAvailableGame({
@@ -66,7 +79,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
 
     store.clientTcpService.on("error", (error) => {
       // TODO handle error
-      console.log("Error:", error);
+      console.log("Error: ", error);
     });
   },
   connectToGame: (game: AvailableGame) => {
@@ -80,12 +93,15 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
         },
         () => {
           console.log("Connected to game server");
-
-          client.write(createNewPlayerJoinRequestEvent(get().clientName));
-          set(() => ({ clientSocket: client }));
-          resolve();
         },
       );
+
+      set(() => ({ clientSocket: client }));
+
+      client.on("connect", () => {
+        client.write(createNewPlayerJoinRequestEvent(get().clientName));
+        resolve();
+      });
 
       client.on("data", (data) => {
         try {
@@ -102,14 +118,23 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
 
       client.on("error", (error) => {
         console.log("Connection error:", error);
-        set(() => ({ clientSocket: null }));
+        get().exitGame();
       });
 
       client.on("close", () => {
         console.log("Connection closed");
-        set(() => ({ clientSocket: null }));
+        get().exitGame();
       });
     });
+  },
+  stopScanningForGames: () => {
+    const store = get();
+
+    store.clientTcpService?.stop();
+    store.clientTcpService?.removeAllListeners();
+    store.setIsJoined(false);
+    store.setIsWaitingForOtp(false);
+    store.setIsInvalidOtp(false);
   },
   setIsWaitingForOtp: (value: boolean) => {
     set(() => ({ isWaitingForOtp: value }));
@@ -119,5 +144,14 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
   },
   setIsJoined: (isJoined: boolean) => {
     set(() => ({ isJoined }));
+  },
+  exitGame: () => {
+    const store = get();
+    console.log("Exiting game");
+    store.clientSocket?.destroy();
+
+    set(() => ({
+      clientSocket: null,
+    }));
   },
 });

@@ -37,7 +37,6 @@ export type GameState = {
   dealer: string | null;
   currentTurn: string | null;
   actionHistory: Action[];
-  buyInAmount: number;
   playersState: { name: string; state: PlayerState }[];
 };
 
@@ -49,6 +48,7 @@ export const enum EventType {
   GAME_STATE = "GAME_STATE",
   INVALID_OTP = "INVALID_OTP",
   NAME_ALREADY_TAKEN = "NAME_ALREADY_TAKEN",
+  DISCONNECT = "DISCONNECT",
   PLAYER_ACTION = "PLAYER_ACTION",
 }
 
@@ -77,6 +77,10 @@ export type GameStateMessage = {
 export type PlayerActionMessage = {
   type: EventType.PLAYER_ACTION;
   action: string;
+};
+
+export type DisconnectMessage = {
+  type: EventType.DISCONNECT;
 };
 
 export type Message =

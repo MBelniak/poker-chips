@@ -3,15 +3,15 @@ import { Text, View } from "react-native";
 import { useStore } from "@/model/store";
 
 const Game = () => {
-  const store = useStore();
-
-  if (store.players.length < 2) {
-    throw new Error("At least 2 players required!");
-  }
+  const { players } = useStore();
 
   return (
     <View style={{ marginBlock: "auto" }}>
-      <Text>Playing game...</Text>
+      {players.length < 2 ? (
+        <Text>{"At least 2 players required!"}</Text>
+      ) : (
+        <Text>Playing game...</Text>
+      )}
     </View>
   );
 };

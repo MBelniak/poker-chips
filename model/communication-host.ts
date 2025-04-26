@@ -6,7 +6,6 @@ import {
 import Socket from "react-native-tcp-socket/lib/types/Socket";
 import { Store } from "@/model/store";
 import {
-  createGameStateEvent,
   createInvalidOtpMessage,
   createNameAlreadyTakenMessage,
   createOtpRequestEvent,
@@ -14,14 +13,14 @@ import {
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
 import { createNewPlayerJoinedEvent } from "@/model/messageCreators";
-import { getOtp } from "@/model/logic";
+import { getClientId, getOtp } from "@/model/logic";
 
 export const handleNewPlayerOTPMessage = (
   socket: Socket,
   msg: NewPlayerOTPResponseMessage,
   store: Store,
 ) => {
-  const id = socket._id.toString();
+  const id = getClientId(socket);
   if (msg.otp !== store.pendingJoinRequests[id].otp) {
     socket.write(createInvalidOtpMessage());
     return;
@@ -33,7 +32,6 @@ export const handleNewPlayerOTPMessage = (
   store.players.forEach((player) =>
     player.socket?.write(createNewPlayerJoinedEvent(playerName)),
   );
-  socket.write(createGameStateEvent(store));
   store.addPlayer({ socket, name: playerName, isHost: false });
 };
 
@@ -48,7 +46,7 @@ export const handleNewPlayerRequest = (
   }
   console.log("Sending otp to new player ", msg.name);
   const otp = getOtp();
-  store.addJoinRequest(socket._id.toString(), {
+  store.addJoinRequest(getClientId(socket), {
     otp,
     playerName: msg.name,
   });
@@ -93,7 +91,7 @@ export const handleConnection = (socket: Socket, getStore: () => Store) => {
     if (player) {
       console.log("Player left ", player.name);
       console.log("Closed connection with ", socket.address());
-      return store.removePlayer(player);
+      store.removePlayer(player);
     }
   });
 };

@@ -1,6 +1,7 @@
 import { GameState, Message } from "./types";
 import { Store } from "@/model/store";
 import {
+  isDisconnectMessage,
   isGameStateMessage,
   isInvalidOtpMessage,
   isOtpRequestMessage,
@@ -15,6 +16,8 @@ export const handleMessageFromHost = (message: Message, store: Store) => {
     store.setIsInvalidOtp(false);
     store.setIsJoined(true);
     store.setGameState(JSON.parse(message.gameState) as GameState);
+  } else if (isDisconnectMessage(message)) {
+    store.clientSocket?.destroy();
+    store.setClientSocket(null);
   }
-  //   TODO handle message
 };
