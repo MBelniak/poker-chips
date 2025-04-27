@@ -5,9 +5,9 @@ import { useEffect } from "react";
 
 const Game = () => {
   const router = useRouter();
-  const { clientSocket, clientName, playersState, exitGame } = useStore();
+  const { clientSocket, playerId, table, exitGame } = useStore();
 
-  const me = playersState.find((player) => player.name === clientName);
+  const me = table?.players.find((player) => player?.id === playerId);
 
   useFocusEffect(() => {
     if (clientSocket) {
@@ -32,7 +32,9 @@ const Game = () => {
   return (
     <View style={{ marginBlock: "auto" }}>
       <Text>{"Playing game"}</Text>
-      <Text>{"My chips: " + (me?.state.chips ?? 0)}</Text>
+      <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
+      <Text>{"Dealer: " + table?.dealer?.name}</Text>
+      <Text>{"Current actor: " + table?.currentActor?.name}</Text>
     </View>
   );
 };

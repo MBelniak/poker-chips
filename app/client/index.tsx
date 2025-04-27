@@ -20,6 +20,7 @@ const JoinGame = () => {
     clientName,
     isInvalidOtp,
     isJoined,
+    joinFailedMessage,
     connectToGame,
     startScanningForGames,
     setClientName,
@@ -58,6 +59,13 @@ const JoinGame = () => {
     }
   }, [clientTcpService, isInvalidOtp, isJoined, router]);
 
+  useEffect(() => {
+    if (joinFailedMessage != null) {
+      setOtpSubmitted(false);
+      setIsConnecting(false);
+    }
+  }, [joinFailedMessage]);
+
   return (
     <View style={{ marginBlock: "auto" }}>
       {isConnecting && <Text>{"Connecting..."}</Text>}
@@ -80,6 +88,9 @@ const JoinGame = () => {
               <Text>{"Waiting for server to let us in..."}</Text>
             )}
             {isInvalidOtp && <Text>{"Invalid otp, please try again"}</Text>}
+            {joinFailedMessage && (
+              <Text>{"Failed to join the table: " + joinFailedMessage}</Text>
+            )}
           </View>
         ) : (
           <View>

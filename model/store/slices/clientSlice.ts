@@ -15,11 +15,13 @@ import {
 export interface ClientSlice {
   clientSocket: Socket | null;
   clientName: string;
+  playerId: string | null;
   clientTcpService: Zeroconf | null;
   availableGames: AvailableGame[];
   isWaitingForOtp: boolean;
   isInvalidOtp: boolean;
   isJoined: boolean;
+  joinFailedMessage: string | null;
   startScanningForGames: () => void;
   stopScanningForGames: () => void;
   addAvailableGame: (game: AvailableGame) => void;
@@ -29,6 +31,8 @@ export interface ClientSlice {
   setIsWaitingForOtp: (value: boolean) => void;
   setIsInvalidOtp: (isInvalid: boolean) => void;
   setIsJoined: (isJoined: boolean) => void;
+  setJoinFailedMessage: (message: string | null) => void;
+  setPlayerId: (id: string | null) => void;
   exitGame: () => void;
 }
 
@@ -42,9 +46,11 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
   clientTcpService: null,
   availableGames: [],
   clientName: "",
+  playerId: null,
   isWaitingForOtp: false,
   isInvalidOtp: false,
   isJoined: false,
+  joinFailedMessage: null,
   setClientSocket: (clientSocket: Socket | null) => {
     set(() => ({ clientSocket }));
   },
@@ -136,15 +142,12 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
     store.setIsWaitingForOtp(false);
     store.setIsInvalidOtp(false);
   },
-  setIsWaitingForOtp: (value: boolean) => {
-    set(() => ({ isWaitingForOtp: value }));
-  },
-  setIsInvalidOtp: (isInvalid: boolean) => {
-    set(() => ({ isInvalidOtp: isInvalid }));
-  },
-  setIsJoined: (isJoined: boolean) => {
-    set(() => ({ isJoined }));
-  },
+  setIsWaitingForOtp: (value: boolean) =>
+    set(() => ({ isWaitingForOtp: value })),
+  setIsInvalidOtp: (isInvalid: boolean) =>
+    set(() => ({ isInvalidOtp: isInvalid })),
+  setIsJoined: (isJoined: boolean) => set(() => ({ isJoined })),
+  setPlayerId: (playerId: string | null) => set(() => ({ playerId })),
   exitGame: () => {
     const store = get();
     console.log("Exiting game");
@@ -154,4 +157,6 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
       clientSocket: null,
     }));
   },
+  setJoinFailedMessage: (message: string | null) =>
+    set(() => ({ joinFailedMessage: message })),
 });

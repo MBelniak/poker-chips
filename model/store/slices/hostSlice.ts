@@ -83,32 +83,29 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
     console.log("Server stopped");
     set(() => ({ server: null }));
   },
-  addPlayer: (player) =>
+  addPlayer: (player) => {
+    const store = get();
+    store.table?.sitDown(player.id, player.name, store.buyInAmount);
     set((state) => ({
       players: [...state.players, player],
-      playersState: [
-        ...state.playersState,
-        {
-          name: player.name,
-          state: {
-            chips: state.buyInAmount,
-          },
-        },
-      ],
-    })),
-  removePlayer: (player) =>
+    }));
+  },
+  removePlayer: (player) => {
+    const store = get();
+    store.table?.standUp(player.id);
     set((state) => ({
       players: state.players.toSpliced(
         state.players.findIndex((p) => p.socket?._id === player.socket?._id),
         1,
       ),
-      playersState: state.playersState.toSpliced(
-        state.playersState.findIndex((p) => p.name === player.name),
-        1,
-      ),
-    })),
+    }));
+  },
   removeAllPlayers: () => {
-    set(() => ({ players: [], playersState: [] }));
+    const store = get();
+    store.table?.players?.forEach(
+      (player) => player && store.table?.standUp(player?.id),
+    );
+    set(() => ({ players: [] }));
   },
   sendDisconnectEventToPlayer: (player: Player) => {
     player.socket?.write(createDisconnectEvent());

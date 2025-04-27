@@ -7,13 +7,13 @@ import Socket from "react-native-tcp-socket/lib/types/Socket";
 import { Store } from "@/model/store";
 import {
   createInvalidOtpMessage,
+  createJoinFailedMessage,
   createNameAlreadyTakenMessage,
   createOtpRequestEvent,
   isNewPlayerJoinRequest,
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
-import { createNewPlayerJoinedEvent } from "@/model/messageCreators";
-import { getClientId, getOtp } from "@/model/logic";
+import { getClientId, getOtp } from "@/utils";
 
 export const handleNewPlayerOTPMessage = (
   socket: Socket,
@@ -29,10 +29,11 @@ export const handleNewPlayerOTPMessage = (
   const playerName = store.pendingJoinRequests[id].playerName;
 
   store.removeJoinRequest(id);
-  store.players.forEach((player) =>
-    player.socket?.write(createNewPlayerJoinedEvent(playerName)),
-  );
-  store.addPlayer({ socket, name: playerName, isHost: false });
+  try {
+    store.addPlayer({ socket, id, name: playerName, isHost: false });
+  } catch (e) {
+    socket.write(createJoinFailedMessage((e as Error).message));
+  }
 };
 
 export const handleNewPlayerRequest = (

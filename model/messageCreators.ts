@@ -4,18 +4,14 @@ import {
   GameState,
   GameStateMessage,
   InvalidOtpMessage,
+  JoinFailedMessage,
   Message,
-  NewPlayerJoinedMessage,
   NewPlayerJoinRequestMessage,
   NewPlayerOTPRequestMessage,
   NewPlayerOTPResponseMessage,
   PlayerActionMessage,
+  PlayerJoinedEvent,
 } from "@/model/types";
-import { mapStoreToGameState, Store } from "@/model/store";
-
-export const isNewPlayerJoined = (
-  msg: Message,
-): msg is NewPlayerJoinedMessage => msg.type === EventType.NEW_PLAYER_JOINED;
 
 export const isNewPlayerJoinRequest = (
   msg: Message,
@@ -33,6 +29,9 @@ export const isOtpRequestMessage = (
 export const isInvalidOtpMessage = (msg: Message): msg is InvalidOtpMessage =>
   msg.type === EventType.INVALID_OTP;
 
+export const isJoinedMessage = (msg: Message): msg is PlayerJoinedEvent =>
+  msg.type === EventType.PLAYER_JOINED;
+
 export const isNewPlayerOTPResponseMessage = (
   msg: Message,
 ): msg is NewPlayerOTPResponseMessage =>
@@ -44,11 +43,8 @@ export const isPlayerAction = (msg: Message): msg is PlayerActionMessage =>
 export const isDisconnectMessage = (msg: Message): msg is DisconnectMessage =>
   msg.type === EventType.DISCONNECT;
 
-export const createNewPlayerJoinedEvent = (name: string) =>
-  JSON.stringify({
-    type: EventType.NEW_PLAYER_JOINED,
-    name,
-  } as NewPlayerJoinedMessage);
+export const isJoinFailedMessage = (msg: Message): msg is JoinFailedMessage =>
+  msg.type === EventType.JOIN_FAILED;
 
 export const createNewPlayerJoinRequestEvent = (name: string) =>
   JSON.stringify({
@@ -78,3 +74,6 @@ export const createNameAlreadyTakenMessage = () =>
 
 export const createDisconnectEvent = () =>
   JSON.stringify({ type: EventType.DISCONNECT });
+
+export const createJoinFailedMessage = (message: string) =>
+  JSON.stringify({ type: EventType.JOIN_FAILED, message });

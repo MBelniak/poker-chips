@@ -5,6 +5,7 @@ import {
   ClientSlice,
   createClientSlice,
 } from "@/model/store/slices/clientSlice";
+import { Table } from "@/model/logic/Table";
 
 export type Store = GameState &
   HostSlice &
@@ -14,18 +15,16 @@ export type Store = GameState &
     setGameState: (state: Partial<GameState>) => void;
   };
 
-export const getDefaultGameState = (): GameState => ({
+export const getDefaultGameState = (buyInAmount: number): GameState => ({
   status: "waiting",
-  dealer: null,
-  currentTurn: null,
   actionHistory: [],
-  playersState: [],
+  table: new Table(buyInAmount),
 });
 
 export const useStore = create<Store>((set, get, store) => ({
   ...createHostSlice(set, get, store),
   ...createClientSlice(set, get, store),
-  ...getDefaultGameState(),
+  ...getDefaultGameState(0),
   buyInAmount: 0,
   setBuyInAmount: (amount: string) =>
     set(() => ({ buyInAmount: amount.length ? parseInt(amount) : 0 })),
@@ -39,9 +38,7 @@ export const useStore = create<Store>((set, get, store) => ({
 export const mapStoreToGameState = (store: Store): GameState => {
   return {
     status: store.status,
-    dealer: store.dealer,
-    currentTurn: store.currentTurn,
     actionHistory: store.actionHistory,
-    playersState: store.playersState,
+    table: store.table,
   };
 };

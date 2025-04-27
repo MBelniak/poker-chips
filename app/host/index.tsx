@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 import { getDefaultGameState, useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
-import { getClientId } from "@/model/logic";
+import { getClientId } from "@/utils";
 import { createGameStateEvent } from "@/model/messageCreators";
+import { HOST_PLAYER_ID } from "@/constants/string-constants";
 
 const Lobby = () => {
   const router = useRouter();
+  const [hostName, setHostName] = useState("");
   const {
     server,
     status,
-    dealer,
+    table,
     players,
     buyInAmount,
-    currentTurn,
     actionHistory,
-    playersState,
     pendingJoinRequests,
     setGameState,
     setBuyInAmount,
@@ -37,9 +37,14 @@ const Lobby = () => {
 
   const createServer = useCallback(() => {
     startServer();
-    addPlayer({ name: "host", socket: null, isHost: true });
-    setGameState(getDefaultGameState());
-  }, [addPlayer, setGameState, startServer]);
+    setGameState(getDefaultGameState(buyInAmount));
+    addPlayer({
+      id: HOST_PLAYER_ID,
+      name: hostName,
+      socket: null,
+      isHost: true,
+    });
+  }, [addPlayer, buyInAmount, hostName, setGameState, startServer]);
 
   const stopHosting = useCallback(() => {
     setBuyInAmount("");
@@ -71,22 +76,12 @@ const Lobby = () => {
       player.socket?.write(
         createGameStateEvent({
           status,
-          dealer,
-          currentTurn,
           actionHistory,
-          playersState,
+          table,
         }),
       );
     });
-  }, [
-    actionHistory,
-    buyInAmount,
-    currentTurn,
-    dealer,
-    players,
-    playersState,
-    status,
-  ]);
+  }, [actionHistory, buyInAmount, players, status, table]);
 
   const startGame = useCallback(() => {
     setGameState({ status: "playing" });
@@ -104,10 +99,15 @@ const Lobby = () => {
             onChangeText={(text) => setBuyInAmount(text)}
             value={buyInAmount ? buyInAmount.toString() : ""}
           />
+          <Text>Your name: </Text>
+          <TextInput
+            onChangeText={(text) => setHostName(text)}
+            value={hostName}
+          />
           <Button
             title="Start Hosting"
             onPress={createServer}
-            disabled={buyInAmount === 0}
+            disabled={buyInAmount === 0 || hostName.trim() === ""}
           />
         </View>
       ) : (
