@@ -1,14 +1,20 @@
-import { GameState, GameStateParsed, Message } from "./types";
+import { Message, TableStateMessage } from "./types";
 import { Store } from "@/model/store";
 import {
   isDisconnectMessage,
-  isGameStateMessage,
   isInvalidOtpMessage,
   isJoinedMessage,
   isJoinFailedMessage,
   isOtpRequestMessage,
+  isStartRoundMessage,
+  isTableStateMessage,
 } from "./messageCreators";
-import { Table } from "@/model/logic/Table";
+import { Table } from "@/model/store/slices/tableSlice";
+
+const handleTableStateMessage = (message: TableStateMessage, store: Store) => {
+  const tableStateParsed = JSON.parse(message.tableState) as Table;
+  store.setTable(tableStateParsed);
+};
 
 export const handleMessageFromHost = (message: Message, store: Store) => {
   if (isOtpRequestMessage(message)) {
@@ -18,28 +24,16 @@ export const handleMessageFromHost = (message: Message, store: Store) => {
     store.setIsInvalidOtp(true);
   } else if (isJoinedMessage(message)) {
     store.setPlayerId(message.id);
-  } else if (isGameStateMessage(message)) {
+  } else if (isTableStateMessage(message)) {
     store.setIsInvalidOtp(false);
     store.setIsJoined(true);
-    const gameStateParsed = JSON.parse(message.gameState) as GameStateParsed;
-    const gameState = {
-      status: gameStateParsed.status,
-      actionHistory: gameStateParsed.actionHistory,
-      table: null,
-    } as GameState;
-    if (gameStateParsed.table) {
-      gameState.table = Table.fromParsedTableState(gameStateParsed.table);
-      gameState.table.players.forEach((player) => {
-        if (player) {
-          player.table = gameState.table!;
-        }
-      });
-    }
-    store.setGameState(gameState);
+    handleTableStateMessage(message, store);
   } else if (isDisconnectMessage(message)) {
     store.clientSocket?.destroy();
     store.setClientSocket(null);
   } else if (isJoinFailedMessage(message)) {
     store.setJoinFailedMessage(message.message);
+  } else if (isStartRoundMessage(message)) {
+    store.dealCards();
   }
 };

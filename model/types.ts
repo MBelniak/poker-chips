@@ -1,7 +1,6 @@
 import Socket from "react-native-tcp-socket/lib/types/Socket";
-import { BettingRound, Pot, Table } from "@/model/logic/Table";
-import { Player as TablePlayer } from "@/model/logic/Player";
-export type GameStatus = "waiting" | "playing" | "finished";
+import { BettingRound, Pot } from "@/model/store/slices/tableSlice";
+import { TablePlayer } from "@/model/store/slices/playerSlice";
 
 export type AvailableGame = {
   name: string;
@@ -22,18 +21,13 @@ export const enum ActionType {
   CALL = "CALL",
   CHECK = "CHECK",
   BET = "BET",
+  RAISE = "RAISE",
 }
 
 export type Action = {
   actor: string;
   actionType: ActionType;
 } & { actionType: ActionType.BET; amount: number };
-
-export type GameState = {
-  status: GameStatus;
-  actionHistory: Action[];
-  table: Table | null;
-};
 
 export type ParsedTableState = {
   buyIn: number;
@@ -54,23 +48,18 @@ export type ParsedTableState = {
   smallBlindPosition?: number;
 };
 
-export type GameStateParsed = {
-  status: GameStatus;
-  actionHistory: Action[];
-  table: ParsedTableState;
-};
-
 export const enum EventType {
   NEW_PLAYER_JOIN_REQUEST = "NEW_PLAYER_JOIN_REQUEST",
   NEW_PLAYER_OTP_REQUEST = "NEW_PLAYER_OTP_REQUEST",
   NEW_PLAYER_OTP_RESPONSE = "NEW_PLAYER_OTP_RESPONSE",
-  GAME_STATE = "GAME_STATE",
+  TABLE_STATE = "TABLE_STATE",
   INVALID_OTP = "INVALID_OTP",
   NAME_ALREADY_TAKEN = "NAME_ALREADY_TAKEN",
   DISCONNECT = "DISCONNECT",
   PLAYER_ACTION = "PLAYER_ACTION",
   JOIN_FAILED = "JOIN_FAILED",
   PLAYER_JOINED = "PLAYER_JOINED",
+  START_ROUND = "START_ROUND",
 }
 
 export type NewPlayerJoinRequestMessage = {
@@ -91,9 +80,9 @@ export type PlayerJoinedEvent = {
   type: EventType.PLAYER_JOINED;
   id: string;
 };
-export type GameStateMessage = {
-  type: EventType.GAME_STATE;
-  gameState: string;
+export type TableStateMessage = {
+  type: EventType.TABLE_STATE;
+  tableState: string;
 };
 export type PlayerActionMessage = {
   type: EventType.PLAYER_ACTION;
@@ -109,10 +98,14 @@ export type JoinFailedMessage = {
   message: string;
 };
 
+export type StartRoundMessage = {
+  type: EventType.START_ROUND;
+};
+
 export type Message =
   | NewPlayerJoinRequestMessage
   | NewPlayerOTPResponseMessage
   | PlayerJoinedEvent
   | JoinFailedMessage
-  | GameStateMessage
+  | TableStateMessage
   | { type: string };

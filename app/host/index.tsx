@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
-import { getDefaultGameState, useStore } from "@/model/store";
+import { useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
 import { getClientId } from "@/utils";
-import { createGameStateEvent } from "@/model/messageCreators";
+import { createTableStateMessage } from "@/model/messageCreators";
 import { HOST_PLAYER_ID } from "@/constants/string-constants";
 
 const Lobby = () => {
@@ -11,14 +11,10 @@ const Lobby = () => {
   const [hostName, setHostName] = useState("");
   const {
     server,
-    status,
     table,
     players,
-    buyInAmount,
-    actionHistory,
     pendingJoinRequests,
-    setGameState,
-    setBuyInAmount,
+    setBuyIn,
     startServer,
     addPlayer,
     removeAllPlayers,
@@ -37,20 +33,18 @@ const Lobby = () => {
 
   const createServer = useCallback(() => {
     startServer();
-    setGameState(getDefaultGameState(buyInAmount));
     addPlayer({
       id: HOST_PLAYER_ID,
       name: hostName,
       socket: null,
       isHost: true,
     });
-  }, [addPlayer, buyInAmount, hostName, setGameState, startServer]);
+  }, [addPlayer, hostName, startServer]);
 
   const stopHosting = useCallback(() => {
-    setBuyInAmount("");
+    setBuyIn("");
     Object.keys(pendingJoinRequests).forEach(removeJoinRequest);
     players.forEach(sendDisconnectEventToPlayer);
-    setGameState({ status: "waiting" });
     removeAllPlayers();
     stopServer();
   }, [
@@ -59,8 +53,7 @@ const Lobby = () => {
     removeAllPlayers,
     removeJoinRequest,
     sendDisconnectEventToPlayer,
-    setBuyInAmount,
-    setGameState,
+    setBuyIn,
     stopServer,
   ]);
 
@@ -73,20 +66,14 @@ const Lobby = () => {
 
   useEffect(() => {
     players.forEach((player) => {
-      player.socket?.write(
-        createGameStateEvent({
-          status,
-          actionHistory,
-          table,
-        }),
-      );
+      player.socket?.write(createTableStateMessage(table));
     });
-  }, [actionHistory, buyInAmount, players, status, table]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [players]);
 
   const startGame = useCallback(() => {
-    setGameState({ status: "playing" });
     router.navigate("/host/game");
-  }, [router, setGameState]);
+  }, [router]);
 
   return (
     <View style={{ marginBlock: "auto" }}>
@@ -96,8 +83,8 @@ const Lobby = () => {
           <Text>Buy in amount: </Text>
           <TextInput
             keyboardType={"numeric"}
-            onChangeText={(text) => setBuyInAmount(text)}
-            value={buyInAmount ? buyInAmount.toString() : ""}
+            onChangeText={(text) => setBuyIn(text)}
+            value={table.buyIn ? table.buyIn.toString() : ""}
           />
           <Text>Your name: </Text>
           <TextInput
@@ -107,7 +94,7 @@ const Lobby = () => {
           <Button
             title="Start Hosting"
             onPress={createServer}
-            disabled={buyInAmount === 0 || hostName.trim() === ""}
+            disabled={table.buyIn === 0 || hostName.trim() === ""}
           />
         </View>
       ) : (

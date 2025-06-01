@@ -14,7 +14,10 @@ import {
 } from "@/constants/Connection";
 import { StateCreator } from "zustand/vanilla";
 import { Store } from "@/model/store";
-import { createDisconnectEvent } from "@/model/messageCreators";
+import {
+  createDisconnectMessage,
+  createStartRoundMessage,
+} from "@/model/messageCreators";
 
 export interface HostSlice {
   hostTcpService: Zeroconf;
@@ -32,6 +35,7 @@ export interface HostSlice {
     data: { otp: string; playerName: string },
   ) => void;
   removeJoinRequest: (id: string) => void;
+  startRound: () => void;
 }
 
 export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
@@ -85,14 +89,14 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
   },
   addPlayer: (player) => {
     const store = get();
-    store.table?.sitDown(player.id, player.name, store.buyInAmount);
+    store.sitDown(player.id, player.name, store.table.buyIn);
     set((state) => ({
       players: [...state.players, player],
     }));
   },
   removePlayer: (player) => {
     const store = get();
-    store.table?.standUp(player.id);
+    store.standUp(player.id);
     set((state) => ({
       players: state.players.toSpliced(
         state.players.findIndex((p) => p.socket?._id === player.socket?._id),
@@ -103,12 +107,12 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
   removeAllPlayers: () => {
     const store = get();
     store.table?.players?.forEach(
-      (player) => player && store.table?.standUp(player?.id),
+      (player) => player && store.standUp(player?.id),
     );
     set(() => ({ players: [] }));
   },
   sendDisconnectEventToPlayer: (player: Player) => {
-    player.socket?.write(createDisconnectEvent());
+    player.socket?.write(createDisconnectMessage());
   },
   addJoinRequest: (id: string, data: { otp: string; playerName: string }) => {
     set((state) => ({
@@ -123,5 +127,12 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
       delete state.pendingJoinRequests[id];
       return { pendingJoinRequests: { ...state.pendingJoinRequests } };
     });
+  },
+  startRound: () => {
+    const store = get();
+    store.players.forEach((player) => {
+      player.socket?.write(createStartRoundMessage());
+    });
+    store.dealCards();
   },
 });

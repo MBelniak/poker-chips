@@ -4,7 +4,7 @@ import { StateCreator } from "zustand/vanilla";
 import { AvailableGame, Message } from "@/model/types";
 import TcpSocket from "react-native-tcp-socket";
 import { Store } from "@/model/store";
-import { createNewPlayerJoinRequestEvent } from "@/model/messageCreators";
+import { createNewPlayerJoinRequestMessage } from "@/model/messageCreators";
 import { handleMessageFromHost } from "@/model/communication-client";
 import {
   SERVICE_DOMAIN,
@@ -105,7 +105,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
       set(() => ({ clientSocket: client }));
 
       client.on("connect", () => {
-        client.write(createNewPlayerJoinRequestEvent(get().clientName));
+        client.write(createNewPlayerJoinRequestMessage(get().clientName));
         resolve();
       });
 

@@ -1,8 +1,7 @@
 import {
   DisconnectMessage,
   EventType,
-  GameState,
-  GameStateMessage,
+  TableStateMessage,
   InvalidOtpMessage,
   JoinFailedMessage,
   Message,
@@ -11,15 +10,17 @@ import {
   NewPlayerOTPResponseMessage,
   PlayerActionMessage,
   PlayerJoinedEvent,
+  StartRoundMessage,
 } from "@/model/types";
+import { Table } from "@/model/store/slices/tableSlice";
 
 export const isNewPlayerJoinRequest = (
   msg: Message,
 ): msg is NewPlayerJoinRequestMessage =>
   msg.type === EventType.NEW_PLAYER_JOIN_REQUEST;
 
-export const isGameStateMessage = (msg: Message): msg is GameStateMessage =>
-  msg.type === EventType.GAME_STATE;
+export const isTableStateMessage = (msg: Message): msg is TableStateMessage =>
+  msg.type === EventType.TABLE_STATE;
 
 export const isOtpRequestMessage = (
   msg: Message,
@@ -46,23 +47,26 @@ export const isDisconnectMessage = (msg: Message): msg is DisconnectMessage =>
 export const isJoinFailedMessage = (msg: Message): msg is JoinFailedMessage =>
   msg.type === EventType.JOIN_FAILED;
 
-export const createNewPlayerJoinRequestEvent = (name: string) =>
+export const isStartRoundMessage = (msg: Message): msg is StartRoundMessage =>
+  msg.type === EventType.START_ROUND;
+
+export const createNewPlayerJoinRequestMessage = (name: string) =>
   JSON.stringify({
     type: EventType.NEW_PLAYER_JOIN_REQUEST,
     name,
   } as NewPlayerJoinRequestMessage);
 
-export const createOtpRequestEvent = () =>
+export const createOtpRequestMessage = () =>
   JSON.stringify({ type: EventType.NEW_PLAYER_OTP_REQUEST });
 
-export const createOtpResponseEvent = (otp: string) =>
+export const createOtpResponseMessage = (otp: string) =>
   JSON.stringify({ type: EventType.NEW_PLAYER_OTP_RESPONSE, otp });
 
-export const createGameStateEvent = (gameState: GameState) =>
+export const createTableStateMessage = (tableState: Table) =>
   JSON.stringify({
-    type: EventType.GAME_STATE,
-    gameState: JSON.stringify(gameState),
-  } as GameStateMessage);
+    type: EventType.TABLE_STATE,
+    tableState: JSON.stringify(tableState),
+  } as TableStateMessage);
 
 export const createInvalidOtpMessage = () =>
   JSON.stringify({
@@ -72,8 +76,11 @@ export const createInvalidOtpMessage = () =>
 export const createNameAlreadyTakenMessage = () =>
   JSON.stringify({ type: EventType.NAME_ALREADY_TAKEN });
 
-export const createDisconnectEvent = () =>
+export const createDisconnectMessage = () =>
   JSON.stringify({ type: EventType.DISCONNECT });
 
 export const createJoinFailedMessage = (message: string) =>
   JSON.stringify({ type: EventType.JOIN_FAILED, message });
+
+export const createStartRoundMessage = () =>
+  JSON.stringify({ type: EventType.START_ROUND });

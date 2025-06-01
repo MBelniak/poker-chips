@@ -3,13 +3,13 @@ import { Button, Text, TextInput, View } from "react-native";
 import { useStore } from "@/model/store";
 import { OTP_LENGTH } from "@/constants/Connection";
 import { AvailableGame } from "@/model/types";
-import { createOtpResponseEvent } from "@/model/messageCreators";
+import { createOtpResponseMessage } from "@/model/messageCreators";
 import { useFocusEffect, useRouter } from "expo-router";
 
 const JoinGame = () => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const [otp, setOtp] = useState("");
   const [otpSubmitted, setOtpSubmitted] = useState(false);
+  const [otp, setOtp] = useState("");
   const router = useRouter();
 
   const {
@@ -45,26 +45,32 @@ const JoinGame = () => {
   );
 
   const submitOtp = useCallback(() => {
-    clientSocket?.write(createOtpResponseEvent(otp));
+    clientSocket?.write(createOtpResponseMessage(otp));
     setOtpSubmitted(true);
   }, [clientSocket, otp]);
+
+  const resetConnectingState = useCallback(() => {
+    setOtpSubmitted(false);
+    setIsConnecting(false);
+  }, []);
 
   useEffect(() => {
     if (isJoined) {
       router.navigate("/client/game");
-      setOtpSubmitted(false);
-      setIsConnecting(false);
+      resetConnectingState();
     } else if (isInvalidOtp) {
-      setOtpSubmitted(false);
+      resetConnectingState();
+    } else if (joinFailedMessage != null) {
+      resetConnectingState();
     }
-  }, [clientTcpService, isInvalidOtp, isJoined, router]);
-
-  useEffect(() => {
-    if (joinFailedMessage != null) {
-      setOtpSubmitted(false);
-      setIsConnecting(false);
-    }
-  }, [joinFailedMessage]);
+  }, [
+    clientTcpService,
+    isInvalidOtp,
+    isJoined,
+    joinFailedMessage,
+    resetConnectingState,
+    router,
+  ]);
 
   return (
     <View style={{ marginBlock: "auto" }}>

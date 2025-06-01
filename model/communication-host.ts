@@ -9,7 +9,7 @@ import {
   createInvalidOtpMessage,
   createJoinFailedMessage,
   createNameAlreadyTakenMessage,
-  createOtpRequestEvent,
+  createOtpRequestMessage,
   isNewPlayerJoinRequest,
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
@@ -51,7 +51,7 @@ export const handleNewPlayerRequest = (
     otp,
     playerName: msg.name,
   });
-  socket.write(createOtpRequestEvent());
+  socket.write(createOtpRequestMessage());
 };
 
 export const handleMessageFromClient = (

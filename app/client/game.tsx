@@ -1,13 +1,26 @@
-import { Text, View } from "react-native";
+import { Button, Text, View } from "react-native";
 import { useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { ActionType } from "@/model/types";
 
 const Game = () => {
   const router = useRouter();
-  const { clientSocket, playerId, table, exitGame } = useStore();
+  const {
+    clientSocket,
+    playerId,
+    getDealer,
+    getCurrentActor,
+    exitGame,
+    getLegalActions,
+    checkAction,
+  } = useStore();
+  const { players } = useStore(
+    useShallow((state) => ({ players: state.table.players })),
+  );
 
-  const me = table?.players.find((player) => player?.id === playerId);
+  const me = players.find((player) => player?.id === playerId);
 
   useFocusEffect(() => {
     if (clientSocket) {
@@ -25,6 +38,16 @@ const Game = () => {
     }
   });
 
+  const takeAction = useCallback(() => {
+    if (!me) return;
+    const legalActions = getLegalActions(me);
+    if (legalActions.length > 0 && legalActions.includes(ActionType.CHECK)) {
+      checkAction(me);
+      // TODO implement broadcasting action to other players
+      // broadcastAction(ActionType.CHECK, me);
+    }
+  }, [checkAction, getLegalActions, me]);
+
   useEffect(() => {
     return exitGame;
   }, [exitGame]);
@@ -33,8 +56,14 @@ const Game = () => {
     <View style={{ marginBlock: "auto" }}>
       <Text>{"Playing game"}</Text>
       <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
-      <Text>{"Dealer: " + table?.dealer?.name}</Text>
-      <Text>{"Current actor: " + table?.currentActor?.name}</Text>
+      <Text>{"Dealer: " + getDealer()?.name}</Text>
+      <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
+      {getCurrentActor()?.id === playerId && (
+        <View>
+          <Text>{"Take the action: "}</Text>
+          <Button title={"Test check"} onPress={takeAction} />
+        </View>
+      )}
     </View>
   );
 };
