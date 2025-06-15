@@ -1,17 +1,27 @@
 import { Text, View } from "react-native";
 import { useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { TakeActionComponent } from "@/components/TakeActionComponent";
 
 const Game = () => {
   const router = useRouter();
-  const { clientSocket, playerId, getDealer, getCurrentActor, exitGame } =
-    useStore();
+  const {
+    clientSocket,
+    playerId,
+    cleanUpTable,
+    getDealer,
+    getCurrentActor,
+    exitGame,
+  } = useStore();
 
-  const { players } = useStore(
-    useShallow((state) => ({ players: state.table.players })),
+  const { players, currentRound, isShowdown } = useStore(
+    useShallow((state) => ({
+      players: state.table.players,
+      currentRound: state.table.currentRound,
+      isShowdown: state.table.isShowdown,
+    })),
   );
 
   const me = players.find((player) => player?.id === playerId);
@@ -31,6 +41,14 @@ const Game = () => {
       });
     }
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!currentRound && !isShowdown) {
+        cleanUpTable();
+      }
+    }, [cleanUpTable, currentRound, isShowdown]),
+  );
 
   useEffect(() => {
     if (clientSocket == null) {

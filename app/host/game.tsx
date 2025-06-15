@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
-import { Text, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { Button, Text, View } from "react-native";
 import { useStore } from "@/model/store";
 import { HOST_PLAYER_ID } from "@/constants/string-constants";
 import { useShallow } from "zustand/react/shallow";
 import { TakeActionComponent } from "@/components/TakeActionComponent";
+import { ShowdownPrompt } from "@/components/ShowdownPrompt";
+import { useFocusEffect } from "expo-router";
 
 const Game = () => {
   const {
@@ -15,10 +17,22 @@ const Game = () => {
     startRound,
   } = useStore();
 
-  const { tablePlayers } = useStore(
-    useShallow((state) => ({ tablePlayers: state.table.players })),
+  const { currentRound, tablePlayers, isShowdown } = useStore(
+    useShallow((state) => ({
+      currentRound: state.table.currentRound,
+      tablePlayers: state.table.players,
+      isShowdown: state.table.isShowdown,
+    })),
   );
   const me = tablePlayers.find((player) => player?.id === HOST_PLAYER_ID);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!currentRound && !isShowdown) {
+        cleanUpTable();
+      }
+    }, [cleanUpTable, currentRound, isShowdown]),
+  );
 
   useEffect(() => {
     startRound();
@@ -28,6 +42,7 @@ const Game = () => {
         currentRound: undefined,
         currentPosition: undefined,
         lastPosition: undefined,
+        isShowdown: false,
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,10 +56,17 @@ const Game = () => {
         <>
           <Text>{"Playing game"}</Text>
           <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
-          <Text>{"Dealer: " + getDealer()?.name}</Text>
-          <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
-          {getCurrentActor()?.id === HOST_PLAYER_ID && (
-            <TakeActionComponent playerId={HOST_PLAYER_ID} />
+          {currentRound == undefined && !isShowdown ? (
+            <Button title={"Start a new round"} onPress={() => startRound()} />
+          ) : (
+            <>
+              <Text>{"Dealer: " + getDealer()?.name}</Text>
+              <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
+              {getCurrentActor()?.id === HOST_PLAYER_ID && (
+                <TakeActionComponent playerId={HOST_PLAYER_ID} />
+              )}
+              {isShowdown && <ShowdownPrompt />}
+            </>
           )}
         </>
       )}

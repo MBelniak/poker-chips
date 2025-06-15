@@ -3,6 +3,7 @@ import { Store } from "@/model/store";
 import {
   isBroadcastPlayerActionMessage,
   isDisconnectMessage,
+  isDistributePotMessage,
   isInvalidOtpMessage,
   isJoinedMessage,
   isJoinFailedMessage,
@@ -39,5 +40,7 @@ export const handleMessageFromHost = (message: Message, store: Store) => {
     store.dealCards();
   } else if (isBroadcastPlayerActionMessage(message)) {
     handlePlayerActionMessage(message.message, store);
+  } else if (isDistributePotMessage(message)) {
+    store.distributePotToWinners(message.pot, message.winners);
   }
 };

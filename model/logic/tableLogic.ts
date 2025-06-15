@@ -118,18 +118,18 @@ export const standUp = (
   player: TablePlayer | string,
   store: Store,
   storeGetter: () => Store,
-) => {
+): TablePlayer[] => {
   let playersToStandUp: TablePlayer[];
   if (typeof player === "string") {
     playersToStandUp = store.table.players.filter(
-      (p: TablePlayer | null) => p && p.id === player && !p.left,
+      (p: TablePlayer | null) => p && p.id === player,
     ) as TablePlayer[];
     if (playersToStandUp.length === 0) {
-      return;
+      return [];
     }
   } else {
     playersToStandUp = store.table.players.filter(
-      (p: TablePlayer | null) => p === player && !p.left,
+      (p: TablePlayer | null) => p?.id === player.id,
     ) as TablePlayer[];
   }
 
@@ -137,43 +137,36 @@ export const standUp = (
     let currentStore = storeGetter();
     const playerIndex = currentStore.table.players.indexOf(player);
 
-    if (currentStore.table.currentRound) {
-      store.setTablePartial({
-        players: currentStore.table.players.with(playerIndex, {
-          ...player,
-          folded: true,
-          left: true,
-        }),
-      });
+    if (
+      currentStore.table.currentRound &&
+      (store.getCurrentActor() === player ||
+        store.getActingPlayers().length <= 1)
+    ) {
+      store.nextAction();
+    }
+
+    store.setTablePartial({
+      players: currentStore.table.players.with(playerIndex, null),
+    });
+
+    currentStore = storeGetter();
+
+    if (playerIndex === currentStore.table.dealerPosition) {
       if (
-        store.getCurrentActor() === player ||
-        store.getActingPlayers().length <= 1
+        currentStore.table.players.filter((player) => player !== null)
+          .length === 0
       ) {
-        store.nextAction();
-      }
-    } else {
-      store.setTablePartial({
-        players: currentStore.table.players.with(playerIndex, null),
-      });
-
-      currentStore = storeGetter();
-
-      if (playerIndex === currentStore.table.dealerPosition) {
-        if (
-          currentStore.table.players.filter((player) => player !== null)
-            .length === 0
-        ) {
-          store.setTablePartial({
-            dealerPosition: undefined,
-            smallBlindPosition: undefined,
-            bigBlindPosition: undefined,
-          });
-        } else {
-          store.moveDealer(currentStore.table.dealerPosition + 1);
-        }
+        store.setTablePartial({
+          dealerPosition: undefined,
+          smallBlindPosition: undefined,
+          bigBlindPosition: undefined,
+        });
+      } else {
+        store.moveDealer(currentStore.table.dealerPosition + 1);
       }
     }
   }
+
   return playersToStandUp;
 };
 
@@ -202,10 +195,11 @@ export const cleanupTable = (storeGetter: () => Store) => {
   });
 
   store.setTablePartial({
-    pots: [{ amount: 0, eligiblePlayers: [] } as Pot],
+    pots: [{ amount: 0, eligiblePlayersIds: [] } as Pot],
     players: JSON.parse(JSON.stringify(storeGetter().table.players)),
     lastRaise: undefined,
     currentBet: undefined,
+    isShowdown: false,
   });
 };
 
@@ -372,16 +366,24 @@ export const gatherBets = (storeGetter: () => Store) => {
         player.bet -= lowestAllInBet;
 
         currentPot.amount += lowestAllInBet;
-        if (!currentPot.eligiblePlayers.includes(player)) {
-          currentPot.eligiblePlayers.push(player);
+        if (
+          !currentPot.eligiblePlayersIds.some(
+            (playerId) => playerId === player.id,
+          )
+        ) {
+          currentPot.eligiblePlayersIds.push(player.id);
         }
         return;
       }
       // Gather bets from folded players and players who only called the lowest all-in.
       currentPot.amount += player.bet;
       player.bet = 0;
-      if (!currentPot.eligiblePlayers.includes(player)) {
-        currentPot.eligiblePlayers.push(player);
+      if (
+        !currentPot.eligiblePlayersIds.some(
+          (playerId) => playerId === player.id,
+        )
+      ) {
+        currentPot.eligiblePlayersIds.push(player.id);
       }
     });
 
@@ -390,7 +392,7 @@ export const gatherBets = (storeGetter: () => Store) => {
     );
 
     // Create new pot.
-    store.table.pots.push({ amount: 0, eligiblePlayers: [] } as Pot);
+    store.table.pots.push({ amount: 0, eligiblePlayersIds: [] } as Pot);
   }
 
   // Once we're done with all-in players add the remaining bets to the pot.
@@ -398,17 +400,22 @@ export const gatherBets = (storeGetter: () => Store) => {
     if (!player || player.bet === 0) return;
     currentPot.amount += player.bet;
     player.bet = 0;
-    if (!currentPot.eligiblePlayers.includes(player)) {
-      currentPot.eligiblePlayers.push(player);
+    if (
+      !currentPot.eligiblePlayersIds.some((playerId) => playerId === player.id)
+    ) {
+      currentPot.eligiblePlayersIds.push(player.id);
     }
   });
 
   // Remove any folded players from pot eligibility.
   store.table.pots.forEach(
     (pot: Pot) =>
-      (pot.eligiblePlayers = pot.eligiblePlayers.filter(
-        (player) => !player?.folded && !player?.left,
-      )),
+      (pot.eligiblePlayersIds = pot.eligiblePlayersIds.filter((playerId) => {
+        const player = store.table.players.find(
+          (player) => player?.id === playerId,
+        );
+        return !player?.folded && !player?.left;
+      })),
   );
 
   store.setTablePartial({

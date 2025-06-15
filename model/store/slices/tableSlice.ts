@@ -12,11 +12,15 @@ import {
   sitDown,
   standUp,
 } from "@/model/logic/tableLogic";
-import { createActionMessage } from "@/model/messageCreators";
+import {
+  createActionMessage,
+  createDistributePotToWinnersMessage,
+} from "@/model/messageCreators";
 import Socket from "react-native-tcp-socket/lib/types/Socket";
+import { HOST_PLAYER_ID } from "@/constants/string-constants";
+import { substituteStorePlayerWithNewPlayer } from "@/utils";
 
 export type Table = {
-  isPlaying: boolean;
   buyIn: number;
   smallBlind: number;
   bigBlind: number;
@@ -33,11 +37,12 @@ export type Table = {
   players: (TablePlayer | null)[];
   pots: Pot[];
   smallBlindPosition?: number;
+  isShowdown: boolean;
 };
 
 export interface Pot {
   amount: number;
-  eligiblePlayers: TablePlayer[];
+  eligiblePlayersIds: string[];
 }
 
 export enum BettingRound {
@@ -76,6 +81,7 @@ export interface TableSlice {
   gatherBets: () => void;
   nextRound: () => void;
   showdown: () => void;
+  distributePotToWinners: (pot: Pot, winners: TablePlayer[]) => void;
   broadcastAction: (
     actionType: ActionType,
     actor: TablePlayer,
@@ -90,7 +96,6 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
   _,
 ) => ({
   table: {
-    isPlaying: false,
     buyIn: 0,
     smallBlind: 5,
     bigBlind: 10,
@@ -107,6 +112,7 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     players: Array(10).fill(null),
     pots: [],
     smallBlindPosition: undefined,
+    isShowdown: false,
   },
   setTable: (table: Table) => {
     set(() => ({
@@ -159,7 +165,7 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
 
     // If there is no pot, create one.
     if (store.table.pots.length === 0) {
-      const newPot = { amount: 0, eligiblePlayers: [] } as Pot;
+      const newPot = { amount: 0, eligiblePlayersIds: [] } as Pot;
       store.setTablePartial({ pots: [...store.table.pots, newPot] });
       return newPot;
     }
@@ -210,7 +216,7 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
   },
   dealCards: () => {
     set((store) => ({
-      table: { ...store.table, isPlaying: true },
+      table: { ...store.table },
     }));
     dealCards(get);
   },
@@ -227,32 +233,59 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     nextRound(get);
   },
   showdown: () => {
-    const store = get();
+    let currentStore = get();
 
-    store.setTablePartial({
+    currentStore.setTablePartial({
       currentRound: undefined,
       currentPosition: undefined,
       lastPosition: undefined,
     });
 
-    store.gatherBets();
+    currentStore.gatherBets();
 
-    if (store.getActivePlayers().length > 1) {
-      store.getActivePlayers().forEach((player) => {
+    currentStore = get();
+
+    if (currentStore.getActivePlayers().length > 1) {
+      currentStore.getActivePlayers().forEach((player) => {
         if (!player) return;
         player.showCards = true;
       });
-      store.setTablePartial({
-        players: JSON.parse(JSON.stringify(store.table.players)),
+      currentStore.setTablePartial({
+        players: JSON.parse(JSON.stringify(currentStore.table.players)),
+        isShowdown: true,
+      });
+    } else if (currentStore.getActivePlayers().length === 1) {
+      currentStore.table.pots.forEach((pot) => {
+        currentStore.getActivePlayers()[0].stackSize += pot.amount;
+      });
+      currentStore.setTablePartial({
+        players: JSON.parse(JSON.stringify(currentStore.table.players)),
+      });
+    }
+  },
+  distributePotToWinners: (pot: Pot, winners: TablePlayer[]) => {
+    const store = get();
+    if (store.playerId === HOST_PLAYER_ID) {
+      store.players.forEach((player) => {
+        player.socket?.write(createDistributePotToWinnersMessage(pot, winners));
       });
     }
 
-    // TODO Distribute pots and mark winners - prompt user
-    // store.table.pots.forEach((pot) => {
-    //   pot.winners = findWinners(pot.eligiblePlayers);
-    //   const award = pot.amount / pot.winners!.length;
-    //   pot.winners!.forEach((player) => (player.stackSize += award));
-    // });
+    winners.forEach((winner) => {
+      winner.stackSize += pot.amount / winners.length;
+      store.table.players = substituteStorePlayerWithNewPlayer(store, winner);
+    });
+
+    store.table.pots.pop();
+
+    store.setTablePartial({
+      players: JSON.parse(JSON.stringify(store.table.players)),
+      pots: [...store.table.pots],
+    });
+
+    if (store.table.pots.length === 0) {
+      store.cleanUpTable();
+    }
   },
   broadcastAction: (
     actionType: ActionType,

@@ -33,7 +33,7 @@ export const TakeActionComponent: React.FC<{ playerId: string }> = ({
   const takeAction = useCallback(
     (action: ActionType) => {
       if (!me) return;
-      broadcastAction(action, me);
+      broadcastAction(action, me, parseInt(betAmount));
       switch (action) {
         case ActionType.FOLD:
           foldAction(me);
@@ -86,10 +86,18 @@ export const TakeActionComponent: React.FC<{ playerId: string }> = ({
         </>
       )}
       {legalActions.includes(ActionType.RAISE) && (
-        <Button title={"Raise"} onPress={() => takeAction(ActionType.RAISE)} />
+        <Button
+          title={"Raise"}
+          onPress={() => takeAction(ActionType.RAISE)}
+          disabled={!betAmount.trim()}
+        />
       )}
       {legalActions.includes(ActionType.BET) && (
-        <Button title={"Bet"} onPress={() => takeAction(ActionType.BET)} />
+        <Button
+          title={"Bet"}
+          onPress={() => takeAction(ActionType.BET)}
+          disabled={!betAmount.trim()}
+        />
       )}
       {legalActions.includes(ActionType.FOLD) && (
         <Button title={"Fold"} onPress={() => takeAction(ActionType.FOLD)} />

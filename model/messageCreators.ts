@@ -1,21 +1,22 @@
 import {
-  isActionTakesAmount,
   ActionType,
   BroadcastActionMessage,
   DisconnectMessage,
+  DistributePotMessage,
   EventType,
   InvalidOtpMessage,
+  isActionTakesAmount,
   JoinFailedMessage,
   Message,
   NewPlayerJoinRequestMessage,
   NewPlayerOTPRequestMessage,
   NewPlayerOTPResponseMessage,
+  NoAmountActionType,
   PlayerJoinedEvent,
   StartRoundMessage,
   TableStateMessage,
-  NoAmountActionType,
 } from "@/model/types";
-import { Table } from "@/model/store/slices/tableSlice";
+import { Pot, Table } from "@/model/store/slices/tableSlice";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
 
 export const isNewPlayerJoinRequest = (
@@ -50,6 +51,10 @@ export const isJoinFailedMessage = (msg: Message): msg is JoinFailedMessage =>
 
 export const isStartRoundMessage = (msg: Message): msg is StartRoundMessage =>
   msg.type === EventType.START_ROUND;
+
+export const isDistributePotMessage = (
+  msg: Message,
+): msg is DistributePotMessage => msg.type === EventType.DISTRIBUTE_POT;
 
 export const isBroadcastPlayerActionMessage = (
   msg: Message,
@@ -129,3 +134,14 @@ export function createActionMessage(
     });
   }
 }
+
+export const createDistributePotToWinnersMessage = (
+  pot: Pot,
+  winners: TablePlayer[],
+) => {
+  return JSON.stringify({
+    type: EventType.DISTRIBUTE_POT,
+    pot,
+    winners,
+  });
+};

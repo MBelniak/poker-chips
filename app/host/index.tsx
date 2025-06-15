@@ -122,7 +122,7 @@ const Lobby = () => {
             );
           })}
           <Button
-            title={table.isPlaying ? "Continue" : "Start game"}
+            title={table.currentRound ? "Continue" : "Start game"}
             onPress={startGame}
             disabled={players.length < 2}
           />

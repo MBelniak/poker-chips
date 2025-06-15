@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand/vanilla";
 import { Store } from "@/model/store";
 import { ActionType } from "@/model/types";
+import { substituteStorePlayerWithNewPlayer } from "@/utils";
 
 export interface TablePlayer {
   bet: number;
@@ -74,7 +75,9 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
       player.bet += callAmount;
     }
     store.setTablePartial({
-      players: JSON.parse(JSON.stringify(store.table.players)),
+      players: JSON.parse(
+        JSON.stringify(substituteStorePlayerWithNewPlayer(store, player)),
+      ),
     });
     store.nextAction();
   },
@@ -138,7 +141,9 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
     }
 
     store.setTablePartial({
-      players: JSON.parse(JSON.stringify(store.table.players)),
+      players: JSON.parse(
+        JSON.stringify(substituteStorePlayerWithNewPlayer(store, player)),
+      ),
     });
     store.nextAction();
   },
@@ -162,9 +167,12 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
     if (!store.getLegalActions(player).includes(ActionType.FOLD)) {
       throw new Error("Illegal action.");
     }
+
     player.folded = true;
     store.setTablePartial({
-      players: JSON.parse(JSON.stringify(store.table.players)),
+      players: JSON.parse(
+        JSON.stringify(substituteStorePlayerWithNewPlayer(store, player)),
+      ),
     });
     store.nextAction();
   },

@@ -87,7 +87,10 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
     store.hostTcpService.unpublishService(SERVICE_NAME);
     store.server?.close();
     console.log("Server stopped");
-    set(() => ({ server: null, table: { ...store.table, isPlaying: false } }));
+    set(() => ({
+      server: null,
+      table: { ...store.table, currentRound: undefined },
+    }));
   },
   addPlayer: (player) => {
     const store = get();

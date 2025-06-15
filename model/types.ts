@@ -60,6 +60,7 @@ export const enum EventType {
   JOIN_FAILED = "JOIN_FAILED",
   PLAYER_JOINED = "PLAYER_JOINED",
   START_ROUND = "START_ROUND",
+  DISTRIBUTE_POT = "DISTRIBUTE_POT",
 }
 
 export type NewPlayerJoinRequestMessage = {
@@ -96,6 +97,12 @@ export type JoinFailedMessage = {
 
 export type StartRoundMessage = {
   type: EventType.START_ROUND;
+};
+
+export type DistributePotMessage = {
+  type: EventType.DISTRIBUTE_POT;
+  pot: Pot;
+  winners: TablePlayer[];
 };
 
 export type NoAmountActionType = Exclude<
@@ -137,4 +144,5 @@ export type Message =
   | JoinFailedMessage
   | TableStateMessage
   | BroadcastActionMessage
+  | DistributePotMessage
   | { type: string };
