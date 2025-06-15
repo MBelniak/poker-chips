@@ -21,20 +21,20 @@ const Game = () => {
       clientSocket.on("error", (error) => {
         console.log("Connection error: ", error);
         exitGame();
-        router.navigate("/client");
+        router.back();
       });
 
       clientSocket.on("close", () => {
         console.log("Connection closed");
         exitGame();
-        router.navigate("/client");
+        router.back();
       });
     }
   });
 
   useEffect(() => {
     if (clientSocket == null) {
-      router.navigate("/client");
+      router.back();
     }
   }, [clientSocket, router]);
 
