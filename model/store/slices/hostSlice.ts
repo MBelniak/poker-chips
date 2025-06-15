@@ -16,6 +16,7 @@ import { StateCreator } from "zustand/vanilla";
 import { Store } from "@/model/store";
 import {
   createDisconnectMessage,
+  createPlayerJoinedEvent,
   createStartRoundMessage,
 } from "@/model/messageCreators";
 
@@ -91,6 +92,10 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
   addPlayer: (player) => {
     const store = get();
     store.sitDown(player.id, player.name, store.table.buyIn);
+    if (!player.isHost) {
+      player.socket.write(createPlayerJoinedEvent(player.id));
+    }
+
     set((state) => ({
       players: [...state.players, player],
     }));

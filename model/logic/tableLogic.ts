@@ -1,6 +1,7 @@
 import { BettingRound, Pot, Table } from "@/model/store/slices/tableSlice";
 import { Store } from "@/model/store";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
+import { ActionType, BroadcastActionMessage, Message } from "@/model/types";
 
 export const moveDealer = (seatNumber: number, store: Store) => {
   if (store.table.players.filter((player) => player !== null).length === 0) {
@@ -124,7 +125,7 @@ export const standUp = (
       (p: TablePlayer | null) => p && p.id === player && !p.left,
     ) as TablePlayer[];
     if (playersToStandUp.length === 0) {
-      throw new Error(`No player found.`);
+      return;
     }
   } else {
     playersToStandUp = store.table.players.filter(
@@ -292,7 +293,7 @@ export const dealCards = (storeGetter: () => Store) => {
 };
 
 export const nextAction = (storeGetter: () => Store) => {
-  const store = storeGetter();
+  let store = storeGetter();
 
   // See if everyone has folded.
   if (store.getActivePlayers().length === 1) {
@@ -315,6 +316,8 @@ export const nextAction = (storeGetter: () => Store) => {
   }
 
   store.setTablePartial({ currentPosition: store.table.currentPosition });
+
+  store = storeGetter();
 
   // if the current actor is null, not an acting player, or if the player has folded or is all-in then move the action again.
   if (
@@ -506,6 +509,31 @@ export const nextRound = (storeGetter: () => Store) => {
         players: JSON.parse(JSON.stringify(store.table.players)),
       });
       store.showdown();
+      break;
+  }
+};
+
+export const handlePlayerActionMessage = (
+  message: BroadcastActionMessage,
+  store: Store,
+) => {
+  const { action, actor } = message.message;
+
+  switch (action) {
+    case ActionType.FOLD:
+      store.foldAction(actor);
+      break;
+    case ActionType.CALL:
+      store.callAction(actor);
+      break;
+    case ActionType.CHECK:
+      store.checkAction(actor);
+      break;
+    case ActionType.BET:
+      store.betAction(actor, message.message.amount);
+      break;
+    case ActionType.RAISE:
+      store.raiseAction(actor, message.message.amount);
       break;
   }
 };

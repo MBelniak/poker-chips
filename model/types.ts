@@ -60,7 +60,6 @@ export const enum EventType {
   JOIN_FAILED = "JOIN_FAILED",
   PLAYER_JOINED = "PLAYER_JOINED",
   START_ROUND = "START_ROUND",
-  ACTION = "ACTION",
 }
 
 export type NewPlayerJoinRequestMessage = {
@@ -103,12 +102,34 @@ export type StartRoundMessage = {
   type: EventType.START_ROUND;
 };
 
+export type NoAmountActionType = Exclude<
+  ActionType,
+  ActionType.BET | ActionType.RAISE
+>;
+
 export type BroadcastActionMessage = {
-  type: EventType.ACTION;
+  type: EventType.PLAYER_ACTION;
   message: {
-    action: ActionType;
     actor: TablePlayer;
-  };
+  } & (
+    | {
+        action: NoAmountActionType;
+      }
+    | {
+        action: ActionType.RAISE;
+        amount: number;
+      }
+    | {
+        action: ActionType.BET;
+        amount: number;
+      }
+  );
+};
+
+export const isActionTakesAmount = (
+  action: ActionType,
+): action is ActionType.RAISE | ActionType.BET => {
+  return [ActionType.BET, ActionType.RAISE].includes(action);
 };
 
 export type Message =

@@ -14,7 +14,7 @@ const Game = () => {
     getCurrentActor,
     exitGame,
     getLegalActions,
-    checkAction,
+    callAction,
     broadcastAction,
   } = useStore();
   const { players } = useStore(
@@ -39,14 +39,20 @@ const Game = () => {
     }
   });
 
+  useEffect(() => {
+    if (clientSocket == null) {
+      router.navigate("/client");
+    }
+  }, [clientSocket, router]);
+
   const takeTestAction = useCallback(() => {
     if (!me) return;
     const legalActions = getLegalActions(me);
-    if (legalActions.length > 0 && legalActions.includes(ActionType.CHECK)) {
-      checkAction(me);
-      broadcastAction(ActionType.CHECK, me);
+    if (legalActions.length > 0 && legalActions.includes(ActionType.CALL)) {
+      broadcastAction(ActionType.CALL, me);
+      callAction(me);
     }
-  }, [broadcastAction, checkAction, getLegalActions, me]);
+  }, [broadcastAction, callAction, getLegalActions, me]);
 
   useEffect(() => {
     return exitGame;
@@ -61,7 +67,7 @@ const Game = () => {
       {getCurrentActor()?.id === playerId && (
         <View>
           <Text>{"Take the action: "}</Text>
-          <Button title={"Test check"} onPress={takeTestAction} />
+          <Button title={"Test call"} onPress={takeTestAction} />
         </View>
       )}
     </View>

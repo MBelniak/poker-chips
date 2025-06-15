@@ -53,7 +53,7 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
   callAction: (player: TablePlayer) => {
     const store = get();
 
-    if (player !== store.getCurrentActor()) {
+    if (player.id !== store.getCurrentActor()?.id) {
       throw new Error("Action invoked on player out of turn!");
     }
     if (!store.getLegalActions(player).includes(ActionType.CALL)) {

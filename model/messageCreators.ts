@@ -1,4 +1,5 @@
 import {
+  isActionTakesAmount,
   ActionType,
   BroadcastActionMessage,
   DisconnectMessage,
@@ -13,6 +14,7 @@ import {
   PlayerJoinedEvent,
   StartRoundMessage,
   TableStateMessage,
+  NoAmountActionType,
 } from "@/model/types";
 import { Table } from "@/model/store/slices/tableSlice";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
@@ -55,7 +57,7 @@ export const isStartRoundMessage = (msg: Message): msg is StartRoundMessage =>
 
 export const isBroadcastActionMessage = (
   msg: Message,
-): msg is BroadcastActionMessage => msg.type === EventType.ACTION;
+): msg is BroadcastActionMessage => msg.type === EventType.PLAYER_ACTION;
 
 export const createNewPlayerJoinRequestMessage = (name: string) =>
   JSON.stringify({
@@ -68,6 +70,12 @@ export const createOtpRequestMessage = () =>
 
 export const createOtpResponseMessage = (otp: string) =>
   JSON.stringify({ type: EventType.NEW_PLAYER_OTP_RESPONSE, otp });
+
+export const createPlayerJoinedEvent = (playerId: string) =>
+  JSON.stringify({
+    type: EventType.PLAYER_JOINED,
+    id: playerId,
+  });
 
 export const createTableStateMessage = (tableState: Table) =>
   JSON.stringify({
@@ -92,11 +100,36 @@ export const createJoinFailedMessage = (message: string) =>
 export const createStartRoundMessage = () =>
   JSON.stringify({ type: EventType.START_ROUND });
 
-export const createActionMessage = (action: ActionType, actor: TablePlayer) =>
-  JSON.stringify({
-    type: EventType.ACTION,
-    message: {
-      action,
-      actor,
-    },
-  });
+export function createActionMessage(
+  action: ActionType.BET | ActionType.RAISE,
+  actor: TablePlayer,
+  amount: number,
+): string;
+export function createActionMessage(
+  action: NoAmountActionType,
+  actor: TablePlayer,
+): string;
+export function createActionMessage(
+  action: ActionType,
+  actor: TablePlayer,
+  amount?: number,
+): string {
+  if (isActionTakesAmount(action)) {
+    return JSON.stringify({
+      type: EventType.PLAYER_ACTION,
+      message: {
+        action,
+        actor,
+        amount,
+      },
+    });
+  } else {
+    return JSON.stringify({
+      type: EventType.PLAYER_ACTION,
+      message: {
+        action,
+        actor,
+      },
+    });
+  }
+}

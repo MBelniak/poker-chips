@@ -16,6 +16,7 @@ import {
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
 import { getClientId, getOtp } from "@/utils";
+import { handlePlayerActionMessage } from "@/model/logic/tableLogic";
 
 export const handleNewPlayerOTPMessage = (
   socket: Socket,
@@ -60,6 +61,7 @@ export const handleBroadcastAction = (
   message: BroadcastActionMessage,
   store: Store,
 ) => {
+  handlePlayerActionMessage(message, store);
   store.broadcastAction(message.message.action, message.message.actor);
 };
 

@@ -1,6 +1,7 @@
-import { Message, TableStateMessage } from "./types";
+import { ActionType, Message, TableStateMessage } from "./types";
 import { Store } from "@/model/store";
 import {
+  isBroadcastActionMessage,
   isDisconnectMessage,
   isInvalidOtpMessage,
   isJoinedMessage,
@@ -10,6 +11,7 @@ import {
   isTableStateMessage,
 } from "./messageCreators";
 import { Table } from "@/model/store/slices/tableSlice";
+import { handlePlayerActionMessage } from "@/model/logic/tableLogic";
 
 const handleTableStateMessage = (message: TableStateMessage, store: Store) => {
   const tableStateParsed = JSON.parse(message.tableState) as Table;
@@ -35,5 +37,7 @@ export const handleMessageFromHost = (message: Message, store: Store) => {
     store.setJoinFailedMessage(message.message);
   } else if (isStartRoundMessage(message)) {
     store.dealCards();
+  } else if (isBroadcastActionMessage(message)) {
+    handlePlayerActionMessage(message, store);
   }
 };

@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand/vanilla";
 import { Store } from "@/model/store";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
-import { ActionType } from "@/model/types";
+import { ActionType, isActionTakesAmount } from "@/model/types";
 import {
   cleanupTable,
   dealCards,
@@ -13,6 +13,7 @@ import {
   standUp,
 } from "@/model/logic/tableLogic";
 import { createActionMessage } from "@/model/messageCreators";
+import Socket from "react-native-tcp-socket/lib/types/Socket";
 
 export type Table = {
   isPlaying: boolean;
@@ -75,7 +76,11 @@ export interface TableSlice {
   gatherBets: () => void;
   nextRound: () => void;
   showdown: () => void;
-  broadcastAction: (actionType: ActionType, actor: TablePlayer) => void;
+  broadcastAction: (
+    actionType: ActionType,
+    actor: TablePlayer,
+    amount?: number,
+  ) => void;
 }
 
 export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
@@ -249,17 +254,34 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     //   pot.winners!.forEach((player) => (player.stackSize += award));
     // });
   },
-  broadcastAction: (actionType: ActionType, actor: TablePlayer) => {
+  broadcastAction: (
+    actionType: ActionType,
+    actor: TablePlayer,
+    amount?: number,
+  ) => {
     const store = get();
 
+    const sendActionMessageOnSocket = (socket: Socket) => {
+      if (isActionTakesAmount(actionType)) {
+        if (amount) {
+          socket.write(createActionMessage(actionType, actor, amount));
+        } else {
+          console.error("Amount cannot be undefined for RAISE and BET actions");
+        }
+      } else {
+        socket.write(createActionMessage(actionType, actor));
+      }
+    };
+
     if (store.server != null) {
+      // We are the host, broadcast event to other players
       store.players
         .filter((player) => !!player.socket && player.id !== actor.id)
         .forEach((player) => {
-          player.socket?.write(createActionMessage(actionType, actor));
+          sendActionMessageOnSocket(player.socket!);
         });
     } else if (store.clientSocket) {
-      store.clientSocket.write(createActionMessage(actionType, actor));
+      sendActionMessageOnSocket(store.clientSocket);
     }
   },
 });
