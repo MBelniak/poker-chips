@@ -1,7 +1,8 @@
 import {
+  ActionType,
+  BroadcastActionMessage,
   DisconnectMessage,
   EventType,
-  TableStateMessage,
   InvalidOtpMessage,
   JoinFailedMessage,
   Message,
@@ -11,8 +12,10 @@ import {
   PlayerActionMessage,
   PlayerJoinedEvent,
   StartRoundMessage,
+  TableStateMessage,
 } from "@/model/types";
 import { Table } from "@/model/store/slices/tableSlice";
+import { TablePlayer } from "@/model/store/slices/playerSlice";
 
 export const isNewPlayerJoinRequest = (
   msg: Message,
@@ -50,6 +53,10 @@ export const isJoinFailedMessage = (msg: Message): msg is JoinFailedMessage =>
 export const isStartRoundMessage = (msg: Message): msg is StartRoundMessage =>
   msg.type === EventType.START_ROUND;
 
+export const isBroadcastActionMessage = (
+  msg: Message,
+): msg is BroadcastActionMessage => msg.type === EventType.ACTION;
+
 export const createNewPlayerJoinRequestMessage = (name: string) =>
   JSON.stringify({
     type: EventType.NEW_PLAYER_JOIN_REQUEST,
@@ -84,3 +91,12 @@ export const createJoinFailedMessage = (message: string) =>
 
 export const createStartRoundMessage = () =>
   JSON.stringify({ type: EventType.START_ROUND });
+
+export const createActionMessage = (action: ActionType, actor: TablePlayer) =>
+  JSON.stringify({
+    type: EventType.ACTION,
+    message: {
+      action,
+      actor,
+    },
+  });

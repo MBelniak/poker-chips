@@ -15,6 +15,7 @@ const Game = () => {
     exitGame,
     getLegalActions,
     checkAction,
+    broadcastAction,
   } = useStore();
   const { players } = useStore(
     useShallow((state) => ({ players: state.table.players })),
@@ -38,15 +39,14 @@ const Game = () => {
     }
   });
 
-  const takeAction = useCallback(() => {
+  const takeTestAction = useCallback(() => {
     if (!me) return;
     const legalActions = getLegalActions(me);
     if (legalActions.length > 0 && legalActions.includes(ActionType.CHECK)) {
       checkAction(me);
-      // TODO implement broadcasting action to other players
-      // broadcastAction(ActionType.CHECK, me);
+      broadcastAction(ActionType.CHECK, me);
     }
-  }, [checkAction, getLegalActions, me]);
+  }, [broadcastAction, checkAction, getLegalActions, me]);
 
   useEffect(() => {
     return exitGame;
@@ -61,7 +61,7 @@ const Game = () => {
       {getCurrentActor()?.id === playerId && (
         <View>
           <Text>{"Take the action: "}</Text>
-          <Button title={"Test check"} onPress={takeAction} />
+          <Button title={"Test check"} onPress={takeTestAction} />
         </View>
       )}
     </View>

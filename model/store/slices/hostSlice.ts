@@ -72,6 +72,7 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
 
     server.on("error", (error: unknown) => {
       console.log("An error occurred with the server", error);
+      get().stopServer();
     });
 
     server.on("close", () => {
@@ -85,7 +86,7 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
     store.hostTcpService.unpublishService(SERVICE_NAME);
     store.server?.close();
     console.log("Server stopped");
-    set(() => ({ server: null }));
+    set(() => ({ server: null, table: { ...store.table, isPlaying: false } }));
   },
   addPlayer: (player) => {
     const store = get();

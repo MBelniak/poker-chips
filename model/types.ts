@@ -60,6 +60,7 @@ export const enum EventType {
   JOIN_FAILED = "JOIN_FAILED",
   PLAYER_JOINED = "PLAYER_JOINED",
   START_ROUND = "START_ROUND",
+  ACTION = "ACTION",
 }
 
 export type NewPlayerJoinRequestMessage = {
@@ -102,10 +103,19 @@ export type StartRoundMessage = {
   type: EventType.START_ROUND;
 };
 
+export type BroadcastActionMessage = {
+  type: EventType.ACTION;
+  message: {
+    action: ActionType;
+    actor: TablePlayer;
+  };
+};
+
 export type Message =
   | NewPlayerJoinRequestMessage
   | NewPlayerOTPResponseMessage
   | PlayerJoinedEvent
   | JoinFailedMessage
   | TableStateMessage
+  | BroadcastActionMessage
   | { type: string };

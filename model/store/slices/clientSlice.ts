@@ -72,6 +72,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
     }));
 
     store.clientTcpService = new Zeroconf();
+
     store.clientTcpService.on("resolved", (service) => {
       console.log("Found game:", service.name);
       store.addAvailableGame({
@@ -138,6 +139,7 @@ export const createClientSlice: StateCreator<Store, [], [], ClientSlice> = (
 
     store.clientTcpService?.stop();
     store.clientTcpService?.removeAllListeners();
+    set(() => ({ availableGames: [] }));
     store.setIsJoined(false);
     store.setIsWaitingForOtp(false);
     store.setIsInvalidOtp(false);

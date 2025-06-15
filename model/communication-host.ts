@@ -1,4 +1,5 @@
 import {
+  BroadcastActionMessage,
   Message,
   NewPlayerJoinRequestMessage,
   NewPlayerOTPResponseMessage,
@@ -10,6 +11,7 @@ import {
   createJoinFailedMessage,
   createNameAlreadyTakenMessage,
   createOtpRequestMessage,
+  isBroadcastActionMessage,
   isNewPlayerJoinRequest,
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
@@ -54,6 +56,13 @@ export const handleNewPlayerRequest = (
   socket.write(createOtpRequestMessage());
 };
 
+export const handleBroadcastAction = (
+  message: BroadcastActionMessage,
+  store: Store,
+) => {
+  store.broadcastAction(message.message.action, message.message.actor);
+};
+
 export const handleMessageFromClient = (
   socket: Socket,
   message: Message,
@@ -64,6 +73,8 @@ export const handleMessageFromClient = (
     handleNewPlayerRequest(socket, message, store);
   } else if (isNewPlayerOTPResponseMessage(message)) {
     handleNewPlayerOTPMessage(socket, message, store);
+  } else if (isBroadcastActionMessage(message)) {
+    handleBroadcastAction(message, store);
   }
 };
 
