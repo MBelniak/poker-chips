@@ -84,10 +84,6 @@ export type TableStateMessage = {
   type: EventType.TABLE_STATE;
   tableState: string;
 };
-export type PlayerActionMessage = {
-  type: EventType.PLAYER_ACTION;
-  action: string;
-};
 
 export type DisconnectMessage = {
   type: EventType.DISCONNECT;
@@ -107,23 +103,25 @@ export type NoAmountActionType = Exclude<
   ActionType.BET | ActionType.RAISE
 >;
 
+export type PlayerActionMessageType = {
+  actor: TablePlayer;
+} & (
+  | {
+      action: NoAmountActionType;
+    }
+  | {
+      action: ActionType.RAISE;
+      amount: number;
+    }
+  | {
+      action: ActionType.BET;
+      amount: number;
+    }
+);
+
 export type BroadcastActionMessage = {
   type: EventType.PLAYER_ACTION;
-  message: {
-    actor: TablePlayer;
-  } & (
-    | {
-        action: NoAmountActionType;
-      }
-    | {
-        action: ActionType.RAISE;
-        amount: number;
-      }
-    | {
-        action: ActionType.BET;
-        amount: number;
-      }
-  );
+  message: PlayerActionMessageType;
 };
 
 export const isActionTakesAmount = (

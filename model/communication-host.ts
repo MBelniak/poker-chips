@@ -11,7 +11,7 @@ import {
   createJoinFailedMessage,
   createNameAlreadyTakenMessage,
   createOtpRequestMessage,
-  isBroadcastActionMessage,
+  isBroadcastPlayerActionMessage,
   isNewPlayerJoinRequest,
   isNewPlayerOTPResponseMessage,
 } from "./messageCreators";
@@ -61,7 +61,7 @@ export const handleBroadcastAction = (
   message: BroadcastActionMessage,
   store: Store,
 ) => {
-  handlePlayerActionMessage(message, store);
+  handlePlayerActionMessage(message.message, store);
   store.broadcastAction(message.message.action, message.message.actor);
 };
 
@@ -75,7 +75,7 @@ export const handleMessageFromClient = (
     handleNewPlayerRequest(socket, message, store);
   } else if (isNewPlayerOTPResponseMessage(message)) {
     handleNewPlayerOTPMessage(socket, message, store);
-  } else if (isBroadcastActionMessage(message)) {
+  } else if (isBroadcastPlayerActionMessage(message)) {
     handleBroadcastAction(message, store);
   }
 };

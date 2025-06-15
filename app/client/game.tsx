@@ -1,22 +1,15 @@
-import { Button, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { ActionType } from "@/model/types";
+import { TakeActionComponent } from "@/components/TakeActionComponent";
 
 const Game = () => {
   const router = useRouter();
-  const {
-    clientSocket,
-    playerId,
-    getDealer,
-    getCurrentActor,
-    exitGame,
-    getLegalActions,
-    callAction,
-    broadcastAction,
-  } = useStore();
+  const { clientSocket, playerId, getDealer, getCurrentActor, exitGame } =
+    useStore();
+
   const { players } = useStore(
     useShallow((state) => ({ players: state.table.players })),
   );
@@ -45,15 +38,6 @@ const Game = () => {
     }
   }, [clientSocket, router]);
 
-  const takeTestAction = useCallback(() => {
-    if (!me) return;
-    const legalActions = getLegalActions(me);
-    if (legalActions.length > 0 && legalActions.includes(ActionType.CALL)) {
-      broadcastAction(ActionType.CALL, me);
-      callAction(me);
-    }
-  }, [broadcastAction, callAction, getLegalActions, me]);
-
   useEffect(() => {
     return exitGame;
   }, [exitGame]);
@@ -65,10 +49,7 @@ const Game = () => {
       <Text>{"Dealer: " + getDealer()?.name}</Text>
       <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
       {getCurrentActor()?.id === playerId && (
-        <View>
-          <Text>{"Take the action: "}</Text>
-          <Button title={"Test call"} onPress={takeTestAction} />
-        </View>
+        <TakeActionComponent playerId={playerId} />
       )}
     </View>
   );

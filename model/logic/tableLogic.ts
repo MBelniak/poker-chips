@@ -1,7 +1,7 @@
-import { BettingRound, Pot, Table } from "@/model/store/slices/tableSlice";
+import { BettingRound, Pot } from "@/model/store/slices/tableSlice";
 import { Store } from "@/model/store";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
-import { ActionType, BroadcastActionMessage, Message } from "@/model/types";
+import { ActionType, PlayerActionMessageType } from "@/model/types";
 
 export const moveDealer = (seatNumber: number, store: Store) => {
   if (store.table.players.filter((player) => player !== null).length === 0) {
@@ -344,7 +344,7 @@ export const gatherBets = (storeGetter: () => Store) => {
       }
     });
     store.setTablePartial({
-      players: JSON.parse(JSON.stringify(store.players)),
+      players: JSON.parse(JSON.stringify(store.table.players)),
     });
     return;
   }
@@ -514,10 +514,10 @@ export const nextRound = (storeGetter: () => Store) => {
 };
 
 export const handlePlayerActionMessage = (
-  message: BroadcastActionMessage,
+  message: PlayerActionMessageType,
   store: Store,
 ) => {
-  const { action, actor } = message.message;
+  const { action, actor } = message;
 
   switch (action) {
     case ActionType.FOLD:
@@ -530,10 +530,10 @@ export const handlePlayerActionMessage = (
       store.checkAction(actor);
       break;
     case ActionType.BET:
-      store.betAction(actor, message.message.amount);
+      store.betAction(actor, message.amount);
       break;
     case ActionType.RAISE:
-      store.raiseAction(actor, message.message.amount);
+      store.raiseAction(actor, message.amount);
       break;
   }
 };

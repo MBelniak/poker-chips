@@ -31,7 +31,7 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
   betAction: (player: TablePlayer, amount: number) => {
     const store = get();
 
-    if (this !== store.getCurrentActor()) {
+    if (player.id !== store.getCurrentActor()?.id) {
       throw new Error("Action invoked on player out of turn!");
     }
     if (!store.getLegalActions(player).includes(ActionType.BET)) {
@@ -81,7 +81,7 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
   raiseAction(player: TablePlayer, amount: number) {
     const store = get();
 
-    if (player !== store.getCurrentActor()) {
+    if (player.id !== store.getCurrentActor()?.id) {
       throw new Error("Action invoked on player out of turn!");
     }
     const legalActions = store.getLegalActions(player);
@@ -145,8 +145,8 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
   checkAction: (player: TablePlayer) => {
     const store = get();
 
-    if (this !== store.getCurrentActor()) {
-      throw new Error("Action invoked on player out of turn!");
+    if (player.id !== store.getCurrentActor()?.id) {
+      throw new Error("Check action invoked on player out of turn!");
     }
     if (!store.getLegalActions(player).includes(ActionType.CHECK)) {
       throw new Error("Illegal action.");
@@ -156,7 +156,7 @@ export const createPlayerSlice: StateCreator<Store, [], [], PlayerSlice> = (
   foldAction: (player: TablePlayer) => {
     const store = get();
 
-    if (this !== store.getCurrentActor()) {
+    if (player.id !== store.getCurrentActor()?.id) {
       throw new Error("Action invoked on player out of turn!");
     }
     if (!store.getLegalActions(player).includes(ActionType.FOLD)) {

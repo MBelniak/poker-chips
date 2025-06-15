@@ -1,7 +1,7 @@
-import { ActionType, Message, TableStateMessage } from "./types";
+import { Message, TableStateMessage } from "./types";
 import { Store } from "@/model/store";
 import {
-  isBroadcastActionMessage,
+  isBroadcastPlayerActionMessage,
   isDisconnectMessage,
   isInvalidOtpMessage,
   isJoinedMessage,
@@ -37,7 +37,7 @@ export const handleMessageFromHost = (message: Message, store: Store) => {
     store.setJoinFailedMessage(message.message);
   } else if (isStartRoundMessage(message)) {
     store.dealCards();
-  } else if (isBroadcastActionMessage(message)) {
-    handlePlayerActionMessage(message, store);
+  } else if (isBroadcastPlayerActionMessage(message)) {
+    handlePlayerActionMessage(message.message, store);
   }
 };

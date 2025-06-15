@@ -1,22 +1,18 @@
-import React, { useCallback, useEffect } from "react";
-import { Button, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Text, View } from "react-native";
 import { useStore } from "@/model/store";
 import { HOST_PLAYER_ID } from "@/constants/string-constants";
 import { useShallow } from "zustand/react/shallow";
-import { ActionType } from "@/model/types";
+import { TakeActionComponent } from "@/components/TakeActionComponent";
 
 const Game = () => {
   const {
     players,
-    playerId,
     setTablePartial,
     getDealer,
     getCurrentActor,
     cleanUpTable,
     startRound,
-    getLegalActions,
-    checkAction,
-    broadcastAction,
   } = useStore();
 
   const { tablePlayers } = useStore(
@@ -37,15 +33,6 @@ const Game = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const takeTestAction = useCallback(() => {
-    if (!me) return;
-    const legalActions = getLegalActions(me);
-    if (legalActions.length > 0 && legalActions.includes(ActionType.CHECK)) {
-      checkAction(me);
-      broadcastAction(ActionType.CHECK, me);
-    }
-  }, [broadcastAction, checkAction, getLegalActions, me]);
-
   return (
     <View style={{ marginBlock: "auto" }}>
       {players.length < 2 ? (
@@ -56,11 +43,8 @@ const Game = () => {
           <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
           <Text>{"Dealer: " + getDealer()?.name}</Text>
           <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
-          {getCurrentActor()?.id === playerId && (
-            <View>
-              <Text>{"Take the action: "}</Text>
-              <Button title={"Test check"} onPress={takeTestAction} />
-            </View>
+          {getCurrentActor()?.id === HOST_PLAYER_ID && (
+            <TakeActionComponent playerId={HOST_PLAYER_ID} />
           )}
         </>
       )}

@@ -10,7 +10,6 @@ import {
   NewPlayerJoinRequestMessage,
   NewPlayerOTPRequestMessage,
   NewPlayerOTPResponseMessage,
-  PlayerActionMessage,
   PlayerJoinedEvent,
   StartRoundMessage,
   TableStateMessage,
@@ -43,9 +42,6 @@ export const isNewPlayerOTPResponseMessage = (
 ): msg is NewPlayerOTPResponseMessage =>
   msg.type === EventType.NEW_PLAYER_OTP_RESPONSE;
 
-export const isPlayerAction = (msg: Message): msg is PlayerActionMessage =>
-  msg.type === EventType.PLAYER_ACTION;
-
 export const isDisconnectMessage = (msg: Message): msg is DisconnectMessage =>
   msg.type === EventType.DISCONNECT;
 
@@ -55,7 +51,7 @@ export const isJoinFailedMessage = (msg: Message): msg is JoinFailedMessage =>
 export const isStartRoundMessage = (msg: Message): msg is StartRoundMessage =>
   msg.type === EventType.START_ROUND;
 
-export const isBroadcastActionMessage = (
+export const isBroadcastPlayerActionMessage = (
   msg: Message,
 ): msg is BroadcastActionMessage => msg.type === EventType.PLAYER_ACTION;
 
