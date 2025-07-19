@@ -1,5 +1,5 @@
 import Socket from "react-native-tcp-socket/lib/types/Socket";
-import { BettingRound, Pot } from "@/model/store/slices/tableSlice";
+import { BettingPhase, Pot } from "@/model/store/slices/tableSlice";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
 
 export type AvailableGame = {
@@ -37,7 +37,7 @@ export type ParsedTableState = {
   bigBlindPosition?: number;
   currentBet?: number;
   currentPosition?: number;
-  currentRound?: BettingRound;
+  currentRound?: BettingPhase;
   dealerPosition?: number;
   debug: boolean;
   handNumber: number;

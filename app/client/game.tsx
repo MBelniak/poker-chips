@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { TakeActionComponent } from "@/components/TakeActionComponent";
+import { CurrentPhaseText } from "@/components/CurrentPhaseText";
 
 const Game = () => {
   const router = useRouter();
@@ -16,10 +17,10 @@ const Game = () => {
     exitGame,
   } = useStore();
 
-  const { players, currentRound, isShowdown } = useStore(
+  const { players, currentPhase, isShowdown } = useStore(
     useShallow((state) => ({
       players: state.table.players,
-      currentRound: state.table.currentRound,
+      currentPhase: state.table.currentPhase,
       isShowdown: state.table.isShowdown,
     })),
   );
@@ -44,10 +45,10 @@ const Game = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!currentRound && !isShowdown) {
+      if (!currentPhase && !isShowdown) {
         cleanUpTable();
       }
-    }, [cleanUpTable, currentRound, isShowdown]),
+    }, [cleanUpTable, currentPhase, isShowdown]),
   );
 
   useEffect(() => {
@@ -62,7 +63,7 @@ const Game = () => {
 
   return (
     <View style={{ marginBlock: "auto" }}>
-      <Text>{"Playing game"}</Text>
+      <CurrentPhaseText />
       <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
       <Text>{"Dealer: " + getDealer()?.name}</Text>
       <Text>{"Current actor: " + getCurrentActor()?.name}</Text>

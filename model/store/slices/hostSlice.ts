@@ -18,7 +18,9 @@ import {
   createDisconnectMessage,
   createPlayerJoinedEvent,
   createStartRoundMessage,
+  createTableStateMessage,
 } from "@/model/messageCreators";
+import { HOST_PLAYER_ID } from "@/constants/string-constants";
 
 export interface HostSlice {
   hostTcpService: Zeroconf;
@@ -89,7 +91,7 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
     console.log("Server stopped");
     set(() => ({
       server: null,
-      table: { ...store.table, currentRound: undefined },
+      table: { ...store.table, currentPhase: undefined },
     }));
   },
   addPlayer: (player) => {
@@ -101,7 +103,12 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
 
     set((state) => ({
       players: [...state.players, player],
+      ...(player.isHost ? { playerId: HOST_PLAYER_ID } : {}),
     }));
+
+    get().players.forEach((player) => {
+      player.socket?.write(createTableStateMessage(get().table));
+    });
   },
   removePlayer: (player) => {
     const store = get();
@@ -112,6 +119,10 @@ export const createHostSlice: StateCreator<Store, [], [], HostSlice> = (
         1,
       ),
     }));
+
+    get().players.forEach((player) => {
+      player.socket?.write(createTableStateMessage(get().table));
+    });
   },
   removeAllPlayers: () => {
     const store = get();

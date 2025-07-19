@@ -3,7 +3,6 @@ import { Button, Text, TextInput, View } from "react-native";
 import { useStore } from "@/model/store";
 import { useFocusEffect, useRouter } from "expo-router";
 import { getClientId } from "@/utils";
-import { createTableStateMessage } from "@/model/messageCreators";
 import { HOST_PLAYER_ID } from "@/constants/string-constants";
 
 const Lobby = () => {
@@ -64,13 +63,6 @@ const Lobby = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    players.forEach((player) => {
-      player.socket?.write(createTableStateMessage(table));
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [players]);
-
   const startGame = useCallback(() => {
     router.navigate("/host/game");
   }, [router]);
@@ -122,7 +114,7 @@ const Lobby = () => {
             );
           })}
           <Button
-            title={table.currentRound ? "Continue" : "Start game"}
+            title={table.currentPhase ? "Continue" : "Start game"}
             onPress={startGame}
             disabled={players.length < 2}
           />

@@ -6,6 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 import { TakeActionComponent } from "@/components/TakeActionComponent";
 import { ShowdownPrompt } from "@/components/ShowdownPrompt";
 import { useFocusEffect } from "expo-router";
+import { CurrentPhaseText } from "@/components/CurrentPhaseText";
 
 const Game = () => {
   const {
@@ -17,9 +18,9 @@ const Game = () => {
     startRound,
   } = useStore();
 
-  const { currentRound, tablePlayers, isShowdown } = useStore(
+  const { currentPhase, tablePlayers, isShowdown } = useStore(
     useShallow((state) => ({
-      currentRound: state.table.currentRound,
+      currentPhase: state.table.currentPhase,
       tablePlayers: state.table.players,
       isShowdown: state.table.isShowdown,
     })),
@@ -28,10 +29,10 @@ const Game = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (!currentRound && !isShowdown) {
+      if (!currentPhase && !isShowdown) {
         cleanUpTable();
       }
-    }, [cleanUpTable, currentRound, isShowdown]),
+    }, [cleanUpTable, currentPhase, isShowdown]),
   );
 
   useEffect(() => {
@@ -39,7 +40,7 @@ const Game = () => {
     return () => {
       cleanUpTable();
       setTablePartial({
-        currentRound: undefined,
+        currentPhase: undefined,
         currentPosition: undefined,
         lastPosition: undefined,
         isShowdown: false,
@@ -54,9 +55,9 @@ const Game = () => {
         <Text>{"At least 2 players required!"}</Text>
       ) : (
         <>
-          <Text>{"Playing game"}</Text>
+          <CurrentPhaseText />
           <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
-          {currentRound == undefined && !isShowdown ? (
+          {currentPhase == undefined && !isShowdown ? (
             <Button title={"Start a new round"} onPress={() => startRound()} />
           ) : (
             <>

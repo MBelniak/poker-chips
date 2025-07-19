@@ -28,7 +28,7 @@ export type Table = {
   bigBlindPosition?: number;
   currentBet?: number;
   currentPosition?: number;
-  currentRound?: BettingRound;
+  currentPhase?: BettingPhase;
   dealerPosition?: number;
   debug: boolean;
   handNumber: number;
@@ -45,7 +45,7 @@ export interface Pot {
   eligiblePlayersIds: string[];
 }
 
-export enum BettingRound {
+export enum BettingPhase {
   PRE_FLOP = "pre-flop",
   FLOP = "flop",
   TURN = "turn",
@@ -103,7 +103,7 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     bigBlindPosition: undefined,
     currentBet: undefined,
     currentPosition: undefined,
-    currentRound: undefined,
+    currentPhase: undefined,
     dealerPosition: undefined,
     debug: false,
     handNumber: 0,
@@ -236,7 +236,7 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     let currentStore = get();
 
     currentStore.setTablePartial({
-      currentRound: undefined,
+      currentPhase: undefined,
       currentPosition: undefined,
       lastPosition: undefined,
     });

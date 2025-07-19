@@ -1,0 +1,4 @@
+1. Undo - keep TableState stack and allow for ~5 or 10 undos.
+2. Allow to abort the round.
+3. Allow reconnecting players.
+3. Display round step (flop, turn or river)

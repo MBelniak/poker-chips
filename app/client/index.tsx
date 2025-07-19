@@ -56,7 +56,7 @@ const JoinGame = () => {
 
   useEffect(() => {
     if (isJoined) {
-      router.navigate("/client/game");
+      router.push("/client/game");
       resetConnectingState();
     } else if (isInvalidOtp) {
       resetConnectingState();

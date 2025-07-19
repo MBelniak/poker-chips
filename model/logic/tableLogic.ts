@@ -1,4 +1,4 @@
-import { BettingRound, Pot } from "@/model/store/slices/tableSlice";
+import { BettingPhase, Pot } from "@/model/store/slices/tableSlice";
 import { Store } from "@/model/store";
 import { TablePlayer } from "@/model/store/slices/playerSlice";
 import { ActionType, PlayerActionMessageType } from "@/model/types";
@@ -90,7 +90,7 @@ export const sitDown = (
     stackSize: buyIn,
     left: false,
     showCards: false,
-    folded: !!store.table.currentRound,
+    folded: !!store.table.currentPhase,
   } as TablePlayer;
 
   if (!seatNumber) {
@@ -106,7 +106,8 @@ export const sitDown = (
   store.setTablePartial({
     players: store.table.players.with(seatNumber, newPlayer),
   });
-  if (!store.table.currentRound) {
+
+  if (!store.table.currentPhase) {
     store.cleanUpTable();
     store.moveDealer(store.table.dealerPosition ?? seatNumber);
   }
@@ -138,7 +139,7 @@ export const standUp = (
     const playerIndex = currentStore.table.players.indexOf(player);
 
     if (
-      currentStore.table.currentRound &&
+      currentStore.table.currentPhase &&
       (store.getCurrentActor() === player ||
         store.getActingPlayers().length <= 1)
     ) {
@@ -207,7 +208,7 @@ export const dealCards = (storeGetter: () => Store) => {
   let currentStore = storeGetter();
 
   // Check for active round and throw if there is one.
-  if (currentStore.table.currentRound) {
+  if (currentStore.table.currentPhase) {
     throw new Error("There is already an active hand!");
   }
 
@@ -220,7 +221,7 @@ export const dealCards = (storeGetter: () => Store) => {
 
   // Set round to pre-flop.
   currentStore.setTablePartial({
-    currentRound: BettingRound.PRE_FLOP,
+    currentPhase: BettingPhase.PRE_FLOP,
     handNumber: storeGetter().table.handNumber + 1,
   });
 
@@ -450,8 +451,8 @@ export const nextRound = (storeGetter: () => Store) => {
     }
   };
 
-  switch (store.table.currentRound) {
-    case BettingRound.PRE_FLOP:
+  switch (store.table.currentPhase) {
+    case BettingPhase.PRE_FLOP:
       // Gather bets and place them in the pot.
       store.gatherBets();
       store = storeGetter();
@@ -461,14 +462,14 @@ export const nextRound = (storeGetter: () => Store) => {
         // Reset current bet and last raise.
         currentBet: undefined,
         lastRaise: undefined,
-        currentRound: BettingRound.FLOP,
+        currentPhase: BettingPhase.FLOP,
       });
 
       // Reset position;
       resetPosition();
 
       break;
-    case BettingRound.FLOP:
+    case BettingPhase.FLOP:
       // Gather bets and place them in the pot.
       store.gatherBets();
       store = storeGetter();
@@ -482,14 +483,14 @@ export const nextRound = (storeGetter: () => Store) => {
         // Reset current bet and last raise.
         currentBet: undefined,
         lastRaise: undefined,
-        currentRound: BettingRound.TURN,
+        currentPhase: BettingPhase.TURN,
       });
 
       // Reset position;
       resetPosition();
 
       break;
-    case BettingRound.TURN:
+    case BettingPhase.TURN:
       // Gather bets and place them in the pot.
       store.gatherBets();
       store = storeGetter();
@@ -499,14 +500,14 @@ export const nextRound = (storeGetter: () => Store) => {
         // Reset current bet and last raise.
         currentBet: undefined,
         lastRaise: undefined,
-        currentRound: BettingRound.RIVER,
+        currentPhase: BettingPhase.RIVER,
       });
 
       // Reset position.
       resetPosition();
 
       break;
-    case BettingRound.RIVER:
+    case BettingPhase.RIVER:
       store.table.players.forEach((player) => {
         if (!player) return;
         player.showCards = !player.folded;
