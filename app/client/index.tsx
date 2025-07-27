@@ -5,8 +5,10 @@ import { OTP_LENGTH } from "@/constants/Connection";
 import { AvailableGame } from "@/model/types";
 import { createOtpResponseMessage } from "@/model/messageCreators";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const JoinGame = () => {
+  const insets = useSafeAreaInsets();
   const [isConnecting, setIsConnecting] = useState(false);
   const [otpSubmitted, setOtpSubmitted] = useState(false);
   const [otp, setOtp] = useState("");
@@ -73,7 +75,13 @@ const JoinGame = () => {
   ]);
 
   return (
-    <View style={{ marginBlock: "auto" }}>
+    <View
+      style={{
+        marginBlock: "auto",
+        marginInlineStart: insets.left,
+        marginInlineEnd: insets.right,
+      }}
+    >
       {isConnecting && <Text>{"Connecting..."}</Text>}
       {!isConnecting &&
         (isWaitingForOtp ? (

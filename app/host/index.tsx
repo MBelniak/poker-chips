@@ -20,6 +20,9 @@ const Lobby = () => {
     sendDisconnectEventToPlayer,
     stopServer,
     removeJoinRequest,
+    setTablePartial,
+    cleanUpTable,
+    isGameInProgress,
   } = useStore();
 
   useFocusEffect(
@@ -58,13 +61,20 @@ const Lobby = () => {
 
   useEffect(() => {
     return () => {
+      cleanUpTable();
+      setTablePartial({
+        currentPhase: undefined,
+        currentPosition: undefined,
+        lastPosition: undefined,
+        isShowdown: false,
+      });
       stopHosting();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startGame = useCallback(() => {
-    router.navigate("/host/game");
+    router.push("/host/game");
   }, [router]);
 
   return (
@@ -73,16 +83,24 @@ const Lobby = () => {
       {server == null ? (
         <View>
           <Text>Buy in amount: </Text>
-          <TextInput
-            keyboardType={"numeric"}
-            onChangeText={(text) => setBuyIn(text)}
-            value={table.buyIn ? table.buyIn.toString() : ""}
-          />
+          {isGameInProgress() ? (
+            <Text>{table.buyIn ? table.buyIn.toString() : ""}</Text>
+          ) : (
+            <TextInput
+              keyboardType={"numeric"}
+              onChangeText={(text) => setBuyIn(text)}
+              value={table.buyIn ? table.buyIn.toString() : ""}
+            />
+          )}
           <Text>Your name: </Text>
-          <TextInput
-            onChangeText={(text) => setHostName(text)}
-            value={hostName}
-          />
+          {isGameInProgress() ? (
+            <Text>{hostName}</Text>
+          ) : (
+            <TextInput
+              onChangeText={(text) => setHostName(text)}
+              value={hostName}
+            />
+          )}
           <Button
             title="Start Hosting"
             onPress={createServer}
@@ -114,7 +132,7 @@ const Lobby = () => {
             );
           })}
           <Button
-            title={table.currentPhase ? "Continue" : "Start game"}
+            title={isGameInProgress() ? "Continue" : "Start game"}
             onPress={startGame}
             disabled={players.length < 2}
           />

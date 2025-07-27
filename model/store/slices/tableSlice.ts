@@ -87,6 +87,7 @@ export interface TableSlice {
     actor: TablePlayer,
     amount?: number,
   ) => void;
+  isGameInProgress: () => boolean;
 }
 
 export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
@@ -316,5 +317,8 @@ export const createTableSlice: StateCreator<Store, [], [], TableSlice> = (
     } else if (store.clientSocket) {
       sendActionMessageOnSocket(store.clientSocket);
     }
+  },
+  isGameInProgress: () => {
+    return get().table.currentPhase != null || get().table.isShowdown;
   },
 });

@@ -66,7 +66,9 @@ const Game = () => {
       <CurrentPhaseText />
       <Text>{"My chips: " + (me?.stackSize ?? 0)}</Text>
       <Text>{"Dealer: " + getDealer()?.name}</Text>
-      <Text>{"Current actor: " + getCurrentActor()?.name}</Text>
+      <Text>
+        {getCurrentActor()?.name && "Current actor: " + getCurrentActor()?.name}
+      </Text>
       {getCurrentActor()?.id === playerId && (
         <TakeActionComponent playerId={playerId} />
       )}
